@@ -1,0 +1,471 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\FinHub\\FinHub\\Finhub\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\walletbalancehistory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\walletbalancehistory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\walletmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\walletmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B379B205-27AC-414D-8D00-07A1ABFF23D7}|Finhub.Infrastructure\\Finhub.Infrastructure.csproj|c:\\finhub\\finhub\\finhub\\finhub.infrastructure\\data\\finhubdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B379B205-27AC-414D-8D00-07A1ABFF23D7}|Finhub.Infrastructure\\Finhub.Infrastructure.csproj|solutionrelative:finhub.infrastructure\\data\\finhubdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Program Files\\dotnet\\sdk\\9.0.307\\Sdks\\Microsoft.NET.Sdk.Razor\\targets\\Microsoft.NET.Sdk.Razor.MvcApplicationPartsDiscovery.targets||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\wallet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\wallet.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\groupmember.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\recurringtransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\recurringtransaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\goal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\goal.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\accountpermission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\accountpermission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\budget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\budget.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\category.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\category.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\enums\\frequency.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\enums\\frequency.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\enums\\accesslevel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\enums\\accesslevel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\enums\\budgettype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\enums\\budgettype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\entities\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\entities\\group.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\enums\\transactionstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\enums\\transactionstatus.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\enums\\transactiontype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\enums\\transactiontype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\enums\\grouptype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\enums\\grouptype.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|c:\\finhub\\finhub\\finhub\\finhub.domain\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21C48258-78BC-4A3D-88F6-260FE07E157F}|Finhub.Domain\\Finhub.Domain.csproj|solutionrelative:finhub.domain\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B379B205-27AC-414D-8D00-07A1ABFF23D7}|Finhub.Infrastructure\\Finhub.Infrastructure.csproj|c:\\finhub\\finhub\\finhub\\finhub.infrastructure\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B379B205-27AC-414D-8D00-07A1ABFF23D7}|Finhub.Infrastructure\\Finhub.Infrastructure.csproj|solutionrelative:finhub.infrastructure\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{988F0FF2-B2D8-4AF0-85D3-11C62F64254A}|Finhub.Application\\Finhub.Application.csproj|c:\\finhub\\finhub\\finhub\\finhub.application\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{988F0FF2-B2D8-4AF0-85D3-11C62F64254A}|Finhub.Application\\Finhub.Application.csproj|solutionrelative:finhub.application\\class1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 324,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{c9c0ae26-aa77-11d2-b3f0-0000f87570ee}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{131369f2-062d-44a2-8671-91ff31efb4f4}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{28836128-fc2c-11d2-a433-00c04f72d18a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{0ad07096-bba9-4900-a651-0598d26f6d24}"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 76,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Microsoft.NET.Sdk.Razor.MvcApplicationPartsDiscovery.targets",
+              "DocumentMoniker": "C:\\Program Files\\dotnet\\sdk\\9.0.307\\Sdks\\Microsoft.NET.Sdk.Razor\\targets\\Microsoft.NET.Sdk.Razor.MvcApplicationPartsDiscovery.targets",
+              "RelativeDocumentMoniker": "..\\..\\..\\Program Files\\dotnet\\sdk\\9.0.307\\Sdks\\Microsoft.NET.Sdk.Razor\\targets\\Microsoft.NET.Sdk.Razor.MvcApplicationPartsDiscovery.targets",
+              "ToolTip": "C:\\Program Files\\dotnet\\sdk\\9.0.307\\Sdks\\Microsoft.NET.Sdk.Razor\\targets\\Microsoft.NET.Sdk.Razor.MvcApplicationPartsDiscovery.targets",
+              "RelativeToolTip": "..\\..\\..\\Program Files\\dotnet\\sdk\\9.0.307\\Sdks\\Microsoft.NET.Sdk.Razor\\targets\\Microsoft.NET.Sdk.Razor.MvcApplicationPartsDiscovery.targets",
+              "ViewState": "AgIAACkAAAAAAAAAAAAmwDUAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003801|",
+              "WhenOpened": "2025-12-07T13:55:19.595Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "WalletMember.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\WalletMember.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\WalletMember.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\WalletMember.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\WalletMember.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAwBMAAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:48:48.381Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "FinhubDbContext.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Infrastructure\\Data\\FinhubDbContext.cs",
+              "RelativeDocumentMoniker": "Finhub.Infrastructure\\Data\\FinhubDbContext.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Infrastructure\\Data\\FinhubDbContext.cs",
+              "RelativeToolTip": "Finhub.Infrastructure\\Data\\FinhubDbContext.cs",
+              "ViewState": "AgIAAJsAAAAAAAAAAAAYwI4AAAAOAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:36:42.454Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\User.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\User.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\User.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\User.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAA9wB4AAAA4AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:28:11.524Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Notification.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Notification.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\Notification.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Notification.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\Notification.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAUwCQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:32:02.692Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "WalletBalanceHistory.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\WalletBalanceHistory.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\WalletBalanceHistory.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\WalletBalanceHistory.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\WalletBalanceHistory.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:32:18.775Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "RecurringTransaction.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\RecurringTransaction.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\RecurringTransaction.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\RecurringTransaction.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\RecurringTransaction.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAAAoAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:32:57.351Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "Goal.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Goal.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\Goal.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Goal.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\Goal.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:32:32.91Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Wallet.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Wallet.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\Wallet.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Wallet.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\Wallet.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwA8AAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:29:21.371Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "GroupMember.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\GroupMember.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\GroupMember.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\GroupMember.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\GroupMember.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAzwAoAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:29:02.85Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "AccountPermission.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\AccountPermission.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\AccountPermission.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\AccountPermission.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\AccountPermission.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAA7wCEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:31:51.695Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Budget.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Budget.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\Budget.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Budget.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\Budget.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAowB8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:31:37.132Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Category.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Category.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\Category.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Category.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\Category.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAowAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:31:23.872Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Frequency.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\Frequency.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Enums\\Frequency.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\Frequency.cs",
+              "RelativeToolTip": "Finhub.Domain\\Enums\\Frequency.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:31:11.177Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "AccessLevel.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\AccessLevel.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Enums\\AccessLevel.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\AccessLevel.cs",
+              "RelativeToolTip": "Finhub.Domain\\Enums\\AccessLevel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:30:57.331Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "BudgetType.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\BudgetType.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Enums\\BudgetType.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\BudgetType.cs",
+              "RelativeToolTip": "Finhub.Domain\\Enums\\BudgetType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:30:41.786Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "Transaction.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Transaction.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\Transaction.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Transaction.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\Transaction.cs",
+              "ViewState": "AgIAAC0AAAAAAAAAAAAAAC8AAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:29:38.883Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Group.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Group.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Entities\\Group.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Entities\\Group.cs",
+              "RelativeToolTip": "Finhub.Domain\\Entities\\Group.cs",
+              "ViewState": "AgIAABEAAAAAAAAAAAAgwB4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:28:42.767Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "TransactionStatus.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\TransactionStatus.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Enums\\TransactionStatus.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\TransactionStatus.cs",
+              "RelativeToolTip": "Finhub.Domain\\Enums\\TransactionStatus.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:27:52.572Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "TransactionType.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\TransactionType.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Enums\\TransactionType.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\TransactionType.cs",
+              "RelativeToolTip": "Finhub.Domain\\Enums\\TransactionType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:27:36.508Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "GroupType.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\GroupType.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Enums\\GroupType.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Enums\\GroupType.cs",
+              "RelativeToolTip": "Finhub.Domain\\Enums\\GroupType.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:27:05.23Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "Class1.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Infrastructure\\Class1.cs",
+              "RelativeDocumentMoniker": "Finhub.Infrastructure\\Class1.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Infrastructure\\Class1.cs",
+              "RelativeToolTip": "Finhub.Infrastructure\\Class1.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:19:55.378Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "Class1.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Application\\Class1.cs",
+              "RelativeDocumentMoniker": "Finhub.Application\\Class1.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Application\\Class1.cs",
+              "RelativeToolTip": "Finhub.Application\\Class1.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:19:37.539Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "Class1.cs",
+              "DocumentMoniker": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Class1.cs",
+              "RelativeDocumentMoniker": "Finhub.Domain\\Class1.cs",
+              "ToolTip": "C:\\FinHub\\FinHub\\Finhub\\Finhub.Domain\\Class1.cs",
+              "RelativeToolTip": "Finhub.Domain\\Class1.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-07T13:19:14.013Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

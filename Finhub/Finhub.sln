@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36705.20 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finhub.Domain", "Finhub.Domain\Finhub.Domain.csproj", "{21C48258-78BC-4A3D-88F6-260FE07E157F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finhub.Application", "Finhub.Application\Finhub.Application.csproj", "{988F0FF2-B2D8-4AF0-85D3-11C62F64254A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finhub.Infrastructure", "Finhub.Infrastructure\Finhub.Infrastructure.csproj", "{B379B205-27AC-414D-8D00-07A1ABFF23D7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Finhub.API", "Finhub.API\Finhub.API.csproj", "{B11088CA-1C9B-4189-ACDD-115F4900785F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{21C48258-78BC-4A3D-88F6-260FE07E157F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21C48258-78BC-4A3D-88F6-260FE07E157F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21C48258-78BC-4A3D-88F6-260FE07E157F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21C48258-78BC-4A3D-88F6-260FE07E157F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{988F0FF2-B2D8-4AF0-85D3-11C62F64254A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{988F0FF2-B2D8-4AF0-85D3-11C62F64254A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{988F0FF2-B2D8-4AF0-85D3-11C62F64254A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{988F0FF2-B2D8-4AF0-85D3-11C62F64254A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B379B205-27AC-414D-8D00-07A1ABFF23D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B379B205-27AC-414D-8D00-07A1ABFF23D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B379B205-27AC-414D-8D00-07A1ABFF23D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B379B205-27AC-414D-8D00-07A1ABFF23D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B11088CA-1C9B-4189-ACDD-115F4900785F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B11088CA-1C9B-4189-ACDD-115F4900785F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B11088CA-1C9B-4189-ACDD-115F4900785F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B11088CA-1C9B-4189-ACDD-115F4900785F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CB0DAF98-1957-4DF8-8BE8-59FDF29D4213}
+	EndGlobalSection
+EndGlobal
