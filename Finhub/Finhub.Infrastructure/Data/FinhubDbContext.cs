@@ -130,7 +130,7 @@ namespace Finhub.Infrastructure.Data
                 .ToTable(t =>
                     t.HasCheckConstraint(
                         "CHK_Budget_Scope",
-                        "([CategoryId] IS NOT NULL OR [WalletId] IS NOT NULL)"
+                        "\"CategoryId\" IS NOT NULL OR \"WalletId\" IS NOT NULL"
                     )
                 );
 

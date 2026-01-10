@@ -1,6 +1,9 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\Finhub\\Finhub.Infrastructure",
+    "\\Finhub\\Finhub.Infrastructure\\Data"
   ],
+  "SelectedNode": "\\Finhub",
   "PreviewInSolutionExplorer": false
 }

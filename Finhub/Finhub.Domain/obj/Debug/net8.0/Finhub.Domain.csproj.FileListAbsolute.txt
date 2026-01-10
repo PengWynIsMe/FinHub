@@ -5,6 +5,7 @@ C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\Finhub.Domain.GeneratedMS
 C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\Finhub.Domain.AssemblyInfoInputs.cache
 C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\Finhub.Domain.AssemblyInfo.cs
 C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\Finhub.Domain.csproj.CoreCompileInputs.cache
+C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\Finhub.Domain.sourcelink.json
 C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\Finhub.Domain.dll
 C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\refint\Finhub.Domain.dll
 C:\FinHub\FinHub\Finhub\Finhub.Domain\obj\Debug\net8.0\Finhub.Domain.pdb

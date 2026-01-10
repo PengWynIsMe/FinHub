@@ -9,6 +9,7 @@ C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\Finhub.Infrastruc
 C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\Finhub.Infrastructure.AssemblyInfoInputs.cache
 C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\Finhub.Infrastructure.AssemblyInfo.cs
 C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\Finhub.Infrastructure.csproj.CoreCompileInputs.cache
+C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\Finhub.Infrastructure.sourcelink.json
 C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\Finhub.I.47C6DD07.Up2Date
 C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\Finhub.Infrastructure.dll
 C:\FinHub\FinHub\Finhub\Finhub.Infrastructure\obj\Debug\net8.0\refint\Finhub.Infrastructure.dll
