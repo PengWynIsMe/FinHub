@@ -31,9 +31,11 @@ public partial class Budget
 
     public virtual Category? Category { get; set; }
 
-    public virtual Group Group { get; set; } = null!;
+    public virtual Group? Group { get; set; } = null!;
 
     public virtual Wallet? Wallet { get; set; }
+
+    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

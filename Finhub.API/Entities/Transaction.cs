@@ -23,6 +23,8 @@ public partial class Transaction
 
     public string? EvidenceUrl { get; set; }
 
+    public string? Evaluation { get; set; }
+
     public string Status { get; set; } = null!;
 
     public Guid? ApprovedBy { get; set; }
@@ -36,6 +38,10 @@ public partial class Transaction
     public virtual User? ApprovedByNavigation { get; set; }
 
     public virtual Category? Category { get; set; }
+
+    public Guid? BudgetId { get; set; }
+
+    public virtual Budget? Budget { get; set; }
 
     public virtual ICollection<Transaction> InverseRelatedTransaction { get; set; } = new List<Transaction>();
 
