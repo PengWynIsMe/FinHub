@@ -1,19 +1,18 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-// Import các hằng số và hàm tiện ích từ Clean Architecture layers
 import { COLORS, SPACING, RADIUS, FONT_SIZE } from '@/constants/theme';
 import { formatCurrencyVND } from '@/utils/format';
+import { getBudgetProgressColor } from '@/utils/format';
 
-// Định nghĩa Interface cho dữ liệu đầu vào
-// (Sau này bạn có thể chuyển interface này vào 'src/domain/entities/Budget.ts')
+// Đã cập nhật Interface để map đúng với Dữ liệu Backend trả về
 export interface BudgetItem {
-  id: string;
+  budgetId: string;     // Backend trả về budgetId chứ không phải id
   name: string;
-  icon: string;
-  allocated: number;
-  spent: number;
+  icon: string | null;  // Có thể là Feather name, hoặc URI ảnh, hoặc null
+  allocated: number;  // Backend trả về amountLimit
+  spent?: number; // Backend có thể sẽ trả về spentAmount (nếu chưa có thì tạm để 0)
   color: string;
 }
 
@@ -21,12 +20,40 @@ interface BudgetCardProps {
   item: BudgetItem;
   type?: 'budget' | 'saving';
   onPress?: (item: BudgetItem) => void;
+  onDelete?: (item: BudgetItem) => void;
 }
 
-export const BudgetCard: React.FC<BudgetCardProps> = ({ item, onPress }) => {
-  // Logic tính toán hiển thị (Presentation Logic)
-  const remaining = item.allocated - item.spent;
-  const progress = item.allocated > 0 ? (item.spent / item.allocated) * 100 : 0;
+export const BudgetCard: React.FC<BudgetCardProps> = ({ item, onPress, onDelete }) => {
+  const allocated = item.allocated || 0;
+  const spent = item.spent || 0; 
+  const remaining = allocated - spent;
+  const progress = allocated > 0 ? (spent / allocated) * 100 : 0;
+  const progressColor = getBudgetProgressColor(spent, allocated);
+  
+  const renderIcon = () => {
+    // 1. Nếu là đường dẫn ảnh (có chứa http hoặc file://)
+    if (item.icon && (item.icon.startsWith('http') || item.icon.startsWith('file:///'))) {
+      return (
+        <Image 
+          source={{ uri: item.icon }} 
+          style={{ width: '100%', height: '100%', borderRadius: RADIUS.md }} 
+        />
+      );
+    }
+    
+    // 2. Nếu là tên Icon của Feather (chữ thường, ví dụ: 'coffee', 'shopping-cart')
+    if (item.icon && /^[a-z\-]+$/.test(item.icon)) {
+      return <Feather name={item.icon as any} size={20} color={item.color || COLORS.primary} />;
+    }
+
+    // 3. Mặc định (Nếu là emoji cũ hoặc rỗng)
+    return <Text style={styles.iconText}>{item.icon || '💰'}</Text>;
+  };
+
+  const handleMorePress = () => {
+    onDelete && onDelete(item);
+  };
+  
 
   return (
     <TouchableOpacity 
@@ -34,30 +61,28 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({ item, onPress }) => {
       activeOpacity={0.9}
       onPress={() => onPress && onPress(item)}
     >
-      {/* --- Header Row: Icon + Tên + Menu --- */}
       <View style={styles.budgetCardHeader}>
-        <View style={[styles.iconContainer, { backgroundColor: item.color + '33' }]}> 
-          {/* Note: '33' là thêm độ trong suốt (alpha) cho mã màu HEX */}
-          <Text style={styles.iconText}>{item.icon}</Text>
+        {/* KHUNG CHỨA ICON */}
+        <View style={[styles.iconContainer, { backgroundColor: (item.color || COLORS.primary) + '20' }]}> 
+          {renderIcon()}
         </View>
 
         <View style={styles.budgetInfo}>
           <Text style={styles.budgetName}>{item.name}</Text>
           <Text style={styles.budgetAllocated}>
-            Allocated: {formatCurrencyVND(item.allocated)}
+            Allocated: {formatCurrencyVND(allocated)}
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.moreButton}>
+        <TouchableOpacity style={styles.moreButton} onPress={handleMorePress}>
           <Feather name="more-horizontal" size={20} color={COLORS.black} />
         </TouchableOpacity>
       </View>
 
-      {/* --- Stats Row: Số tiền đã chi & Còn lại --- */}
       <View style={styles.statsRow}>
         <View>
           <Text style={styles.statLabel}>Spent</Text>
-          <Text style={styles.statValue}>{formatCurrencyVND(item.spent)}</Text>
+          <Text style={styles.statValue}>{formatCurrencyVND(spent)}</Text>
         </View>
         <View style={styles.statRightAlign}>
           <Text style={styles.statLabel}>Remaining</Text>
@@ -67,14 +92,13 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({ item, onPress }) => {
         </View>
       </View>
 
-      {/* --- Progress Bar --- */}
       <View style={styles.progressBarContainer}>
         <View
           style={[
             styles.progressBar,
             {
-              width: `${Math.min(progress, 100)}%`, // Đảm bảo không vượt quá 100%
-              backgroundColor: item.color,
+              width: `${Math.min(progress, 100)}%`,
+              backgroundColor: progressColor,
             },
           ]}
         />
@@ -83,19 +107,16 @@ export const BudgetCard: React.FC<BudgetCardProps> = ({ item, onPress }) => {
   );
 };
 
-// Styles riêng biệt cho Component này
 const styles = StyleSheet.create({
   budgetCard: {
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.lg,
     padding: SPACING.lg,
     marginBottom: SPACING.md,
-    // Shadow cho iOS
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
-    // Shadow cho Android
     elevation: 3,
   },
   budgetCardHeader: {
@@ -104,8 +125,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: RADIUS.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -149,7 +170,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   progressBarContainer: {
-    height: 6, // Tăng nhẹ độ dày để nhìn rõ hơn
+    height: 6,
     backgroundColor: COLORS.gray200,
     borderRadius: RADIUS.sm,
     overflow: 'hidden',
