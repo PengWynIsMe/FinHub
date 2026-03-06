@@ -19,7 +19,8 @@ export interface BudgetItem {
 
 interface BudgetCardProps {
   item: BudgetItem;
-  onPress?: (item: BudgetItem) => void; // Thêm callback để xử lý khi user bấm vào card
+  type?: 'budget' | 'saving';
+  onPress?: (item: BudgetItem) => void;
 }
 
 export const BudgetCard: React.FC<BudgetCardProps> = ({ item, onPress }) => {

@@ -1,33 +1,51 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StatusBar, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { COLORS, SPACING, FONT_SIZE, RADIUS } from '@/constants/theme';
+import { COLORS, SPACING, FONT_SIZE } from '@/constants/theme';
 import { BudgetSummaryCard } from '@/components/wallet/BudgetSummaryCard';
 import { BudgetCard } from '@/components/wallet/BudgetCard';
+import { router } from 'expo-router';
 
-const MOCK_USER = {
-  name: 'Push Puttichai',
-  avatar: 'https://i.pravatar.cc/100',
-  unallocatedMoney: 10000000,
-  monthlySpending: 100000,
-};
+import { useAuthStore } from '@/stores/auth.store';
+import axiosClient from '@/api/axiosClient';
 
-const MOCK_BUDGETS = {
-  mandatory: [
-    { id: '1', name: 'Travel', icon: '✈️', allocated: 0, spent: 0, color: COLORS.budgetTravel },
-    { id: '2', name: 'Pet', icon: '🐕', allocated: 0, spent: 0, color: COLORS.budgetPet },
-  ],
-  nonRecurring: [
-    { id: '3', name: 'Car maintenance', icon: '🚗', allocated: 0, spent: 0, color: COLORS.budgetCar },
-  ],
-};
+import { Feather, Ionicons } from '@expo/vector-icons'; 
+
+// 🗑️ ĐÃ XÓA MOCK_BUDGETS ĐI RỒI NHÉ!
 
 export default function HomeScreen() {
+  const user = useAuthStore((state: { user: any; }) => state.user);
+  
+  // 1. 🆕 Cập nhật State: Thêm 2 mảng rỗng để hứng danh sách budget từ API
+  const [walletSummary, setWalletSummary] = useState({
+    unallocatedMoney: 0,
+    monthlySpending: 0,
+    mandatory: [],     // Thêm mảng này
+    nonRecurring: []   // Thêm mảng này
+  });
+
+  useEffect(() => {
+    const fetchWalletSummary = async () => {
+      try {
+        const response = await axiosClient.get('/Budget/summary');
+        // Backend trả về đúng form có cả mandatory và nonRecurring, ta nạp hết vào State!
+        setWalletSummary(response.data);
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin ví:", error);
+      }
+    };
+
+    fetchWalletSummary();
+  }, []);
+
   const handleAllocate = () => {
-    console.log("Navigating to Allocate Screen...");
-    // router.push('/wallet/allocate');
+    router.push({
+      pathname: '/group/create-shared',
+      params: { type: 'budget', action: 'create' }
+    });
   };
+
+  const defaultAvatar = `https://ui-avatars.com/api/?name=${user?.fullName || 'User'}&background=15476C&color=fff`;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -36,34 +54,60 @@ export default function HomeScreen() {
       {/* Header Section */}
       <View style={styles.header}>
         <View style={styles.userRow}>
-          <View style={styles.userInfo}>
-            <Image source={{ uri: MOCK_USER.avatar }} style={styles.avatar} />
-            <Text style={styles.greeting}>Hi, {MOCK_USER.name}</Text>
-          </View>
+          <TouchableOpacity 
+            style={styles.userInfo}
+            activeOpacity={0.7}
+            onPress={() => router.push('/profile')}
+          >
+            <Image 
+              source={{ uri: user?.avatarUrl || defaultAvatar }} 
+              style={styles.avatar} 
+            />
+            <Text style={styles.greeting}>Hi, {user?.fullName || 'Guest'}</Text>
+          </TouchableOpacity>
+          
           <View style={styles.headerActions}>
-             <TouchableOpacity style={styles.headerButton}><Text>🔔</Text></TouchableOpacity>
-             <TouchableOpacity style={styles.headerButton}><Text>⚙️</Text></TouchableOpacity>
+             <TouchableOpacity style={styles.headerButton} activeOpacity={0.7}>
+               <Feather name="bell" size={24} color={COLORS.white} />
+             </TouchableOpacity>
+
+             <TouchableOpacity 
+                style={styles.headerButton} 
+                activeOpacity={0.7}
+                onPress={() => router.push('/scan')}
+              >
+               <Ionicons name="scan" size={24} color={COLORS.white} />
+             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Component đã tách: Budget Summary */}
         <BudgetSummaryCard 
-            unallocatedMoney={MOCK_USER.unallocatedMoney}
-            monthlySpending={MOCK_USER.monthlySpending}
+            unallocatedMoney={walletSummary.unallocatedMoney}
+            monthlySpending={walletSummary.monthlySpending}
             onAllocatePress={handleAllocate}
         />
       </View>
 
       {/* Body Section */}
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* 2. 🆕 Render danh sách Mandatory thật từ State */}
         <Text style={styles.sectionTitle}>Mandatory fee</Text>
-        {MOCK_BUDGETS.mandatory.map((item) => (
-          <BudgetCard key={item.id} item={item} />
+        {walletSummary.mandatory.map((item: any) => (
+          <BudgetCard 
+            key={item.budgetId} // Dùng budgetId do Backend trả về
+            onPress={() => router.push(`/group/wallet-detail/${item.budgetId}`)} 
+            item={item} 
+          />
         ))}
 
+        {/* 3. 🆕 Render danh sách Non-recurring thật từ State */}
         <Text style={[styles.sectionTitle, styles.sectionTitleSpacing]}>Non-recurring fee</Text>
-        {MOCK_BUDGETS.nonRecurring.map((item) => (
-          <BudgetCard key={item.id} item={item} />
+        {walletSummary.nonRecurring.map((item: any) => (
+          <BudgetCard 
+            key={item.budgetId} 
+            item={item} 
+          />
         ))}
         
         <View style={{ height: 80 }} />
@@ -89,10 +133,11 @@ const styles = StyleSheet.create({
   userInfo: { flexDirection: 'row', alignItems: 'center' },
   avatar: { width: 48, height: 48, borderRadius: 24, marginRight: SPACING.md },
   greeting: { color: COLORS.white, fontSize: FONT_SIZE.lg, fontWeight: '600' },
-  headerActions: { flexDirection: 'row' },
+  headerActions: { flexDirection: 'row', alignItems: 'center' },
   headerButton: {
     width: 40, height: 40,
     alignItems: 'center', justifyContent: 'center',
+    marginLeft: SPACING.sm, 
   },
   scrollView: { flex: 1, paddingHorizontal: SPACING.xl },
   scrollContent: { paddingTop: SPACING.lg },

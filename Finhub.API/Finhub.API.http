@@ -1,0 +1,26 @@
+@Finhub.API_HostAddress = http://localhost:5000
+
+### 1. ??NG KÝ TÀI KHO?N M?I
+POST {{Finhub.API_HostAddress}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "email": "test@finhub.com",
+  "password": "Password123!",
+  "fullName": "Nguyen Van A",
+  "nickname": "Anh A"
+}
+
+### 2. ??NG NH?P L?Y TOKEN
+POST {{Finhub.API_HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "email": "test@finhub.com",
+  "password": "Password123!"
+}
+
+### 3. L?Y THÔNG TIN USER (Thay ch? YOUR_TOKEN_HERE b?ng token l?y ???c ? b??c 2)
+GET {{Finhub.API_HostAddress}}/api/User/me
+Accept: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
