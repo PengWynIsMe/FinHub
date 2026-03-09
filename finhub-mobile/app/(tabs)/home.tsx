@@ -47,34 +47,8 @@ export default function HomeScreen() {
     });
   };
 
-  // const handleDeleteBudget = async (item: any) => {
-  //   try {
-  //     // 1. Gọi API Xóa xuống Backend
-  //     await axiosClient.delete(`/Budget/${item.budgetId}`);
-      
-  //     // 2. Cập nhật lại State UI ngay lập tức
-  //     setWalletSummary((prev: any) => {
-  //       // 🆕 Lấy lại số tiền đã cấp cho hũ này để "hoàn" về ví tổng
-  //       const refundedAmount = item.allocated || 0;
-
-  //       return {
-  //         ...prev,
-  //         // 🆕 Cộng trả tiền về Unallocated Money!
-  //         unallocatedMoney: prev.unallocatedMoney + refundedAmount, 
-          
-  //         mandatory: prev.mandatory.filter((b: any) => b.budgetId !== item.budgetId),
-  //         nonRecurring: prev.nonRecurring.filter((b: any) => b.budgetId !== item.budgetId)
-  //       };
-  //     });
-
-  //   } catch (error) {
-  //     console.error("Lỗi khi xóa Budget:", error);
-  //     Alert.alert("Lỗi", "Không thể xóa ngân sách lúc này.");
-  //   }
-  // };
 
   const handleDeleteBudget = async (item: any) => {
-  // ✅ Alert confirm với đúng message yêu cầu
     Alert.alert(
       "Xóa ngân sách",
       "Bạn có chắc muốn xóa ngân sách này? Các giao dịch cũ vẫn sẽ được lưu lại trong lịch sử ví của bạn.",
@@ -89,9 +63,6 @@ export default function HomeScreen() {
           onPress: async () => {
             try {
               await axiosClient.delete(`/Budget/${item.budgetId}`);
-
-              // ✅ Chỉ xóa khỏi list UI
-              // KHÔNG cộng lại unallocatedMoney vì giao dịch vẫn còn trong ví
               setWalletSummary((prev: any) => ({
                 ...prev,
                 mandatory: prev.mandatory.filter((b: any) => b.budgetId !== item.budgetId),
@@ -125,7 +96,7 @@ export default function HomeScreen() {
               source={{ uri: user?.avatarUrl || defaultAvatar }} 
               style={styles.avatar} 
             />
-            <Text style={styles.greeting}>Hi, {user?.fullName || 'Guest'}</Text>
+            <Text style={styles.greeting}>Hi, {user?.nickname || 'Guest'}</Text>
           </TouchableOpacity>
           
           <View style={styles.headerActions}>
@@ -158,7 +129,7 @@ export default function HomeScreen() {
         {walletSummary.mandatory.map((item: any) => (
           <BudgetCard 
             key={item.budgetId} // Dùng budgetId do Backend trả về
-            onPress={() => router.push(`/group/wallet-detail/${item.budgetId}`)} 
+            onPress={() => router.push(`/group/budget-detail/${item.budgetId}`)} 
             onDelete={handleDeleteBudget}
             item={item} 
           />
@@ -169,7 +140,7 @@ export default function HomeScreen() {
         {walletSummary.nonRecurring.map((item: any) => (
           <BudgetCard 
             key={item.budgetId}
-            onPress={() => router.push(`/group/wallet-detail/${item.budgetId}`)} 
+            onPress={() => router.push(`/group/budget-detail/${item.budgetId}`)} 
             onDelete={handleDeleteBudget}
             item={item} 
           />

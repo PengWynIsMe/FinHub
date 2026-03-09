@@ -19,14 +19,13 @@ import { router } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { COLORS } from '@/constants/theme';
 import axiosClient from '@/api/axiosClient';
-import { useAuthStore } from '@/stores/auth.store';
 
 export default function ManualInputScreen() {
-  const user = useAuthStore((state: any) => state.user);
-
   const [activeTab, setActiveTab] = useState<'moneyOut' | 'moneyIn'>('moneyOut');
+
+  const [wallets, setWallets] = useState<any[]>([]);
+  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
   
-  // 1. ĐÃ SỬA: Bỏ số 75.000 và Eating đi, để rỗng ban đầu!
   const [amount, setAmount] = useState(''); 
   const [note, setNote] = useState('');     
   
@@ -35,42 +34,50 @@ export default function ManualInputScreen() {
   const [evaluation, setEvaluation] = useState<'Need' | 'Want'>('Need');
   const [isLoading, setIsLoading] = useState(true);
 
-  // FETCH DATA BUDGET
+  // FETCH DATA
   useEffect(() => {
-    const fetchBudgets = async () => {
-      try {
-        const res = await axiosClient.get('/Budget/summary');
-        const allBudgets = [...(res.data.mandatory || []), ...(res.data.nonRecurring || [])];
-        setBudgets(allBudgets);
-        if (allBudgets.length > 0) {
-          setSelectedBudget(allBudgets[0].budgetId);
-        }
-      } catch (error) {
-        console.error("Lỗi lấy danh sách Budget:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchBudgets();
-  }, []);
+  const fetchData = async () => {
+    try {
+      const [budgetRes, walletRes] = await Promise.all([
+        axiosClient.get('/Budget/all-accessible'),
+        axiosClient.get('/Wallet'),
+      ]);
 
-  // 2. LOGIC THANH CHẠY (PROGRESS BAR) CHUẨN XÁC
+      const allBudgets = budgetRes.data;
+      setBudgets(allBudgets);
+      if (allBudgets.length > 0) setSelectedBudget(allBudgets[0].id);
+      // console.log('budget keys:', allBudgets.map((b: any) => b.budgetId));
+      // console.log('budget object keys:', Object.keys(allBudgets[0]));
+      // console.log('first budget:', JSON.stringify(allBudgets[0], null, 2));
+
+      const allWallets = walletRes.data;
+      setWallets(allWallets);
+      if (allWallets.length > 0) setSelectedWallet(allWallets[0].walletId);
+      console.log('wallet keys:', allWallets.map((w: any) => w.walletId));
+
+    } catch (error) {
+      console.error("Lỗi lấy dữ liệu:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  fetchData();
+}, []);
+
+  // LOGIC THANH CHẠY (PROGRESS BAR)
   const rawAmount = parseFloat(amount.replace(/\./g, '')) || 0;
   
-  // Lấy dữ liệu của hũ ngân sách đang được chọn
-  const activeBudgetObj = budgets.find(b => b.budgetId === selectedBudget);
+  // 💡 ĐÃ SỬA: Đổi budgetId thành id
+  const activeBudgetObj = budgets.find(b => b.id === selectedBudget);
   const allocated = activeBudgetObj?.allocated || 0;
   const currentSpent = activeBudgetObj?.spent || 0;
 
-  // Nếu là Chi (moneyOut) -> Cộng thêm tiền vào mức Đã Tiêu. 
-  // Nếu Thu (moneyIn) -> Trừ bớt tiền Đã Tiêu đi.
   const previewSpent = activeTab === 'moneyOut' 
     ? currentSpent + rawAmount 
     : currentSpent - rawAmount;
   
   const remainingAmount = allocated - previewSpent; 
   
-  // Ép phần trăm từ 0% đến 100% để thanh màu không bị trào ra ngoài UI
   const spentPercentage = allocated > 0 
     ? Math.max(0, Math.min((previewSpent / allocated) * 100, 100)) 
     : 0;
@@ -86,29 +93,53 @@ export default function ManualInputScreen() {
   };
 
   const handleSave = async () => {
-    if (!amount || amount === '0') {
-      Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
-      return;
-    }
-    try {
-      const transactionData = {
-        walletId: user?.primaryWalletId,
-        budgetId: selectedBudget,
-        amount: rawAmount,
-        type: activeTab === 'moneyOut' ? 'Expense' : 'Income',
-        note: note,
-        evaluation: activeTab === 'moneyOut' ? evaluation : null
-      };
+  if (!amount || amount === '0') {
+    Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
+    return;
+  }
 
-      await axiosClient.post('/Transaction', transactionData);
-      
-      Keyboard.dismiss();
-      Alert.alert('Thành công', 'Đã lưu giao dịch!');
-      router.back();
-    } catch (error: any) {
-      Alert.alert('Lỗi', 'Không thể lưu giao dịch lúc này.');
+  try {
+    let transactionData: any;
+
+    if (activeTab === 'moneyOut') {
+      // Chi tiêu — dùng budget
+      if (!activeBudgetObj) {
+        Alert.alert('Lỗi', 'Vui lòng chọn ngân sách!');
+        return;
+      }
+      transactionData = {
+        walletId: activeBudgetObj.walletId,
+        budgetId: activeBudgetObj.id,
+        amount: rawAmount,
+        type: 'Expense',
+        note: note,
+        evaluation: evaluation
+      };
+    } else {
+      // Nạp tiền — dùng wallet
+      if (!selectedWallet) {
+        Alert.alert('Lỗi', 'Vui lòng chọn ví!');
+        return;
+      }
+      transactionData = {
+        walletId: selectedWallet,
+        budgetId: null,   // ✅ Không gắn vào budget nào
+        amount: rawAmount,
+        type: 'Income',
+        note: note,
+        evaluation: null
+      };
     }
-  };
+
+    await axiosClient.post('/Transaction', transactionData);
+    Keyboard.dismiss();
+    Alert.alert('Thành công', 'Đã lưu giao dịch!');
+    router.back();
+  } catch (error: any) {
+    console.error("Lỗi khi lưu:", error);
+    Alert.alert('Lỗi', 'Không thể lưu giao dịch lúc này.');
+  }
+};
 
   const renderIcon = (icon: string | null, color: string) => {
     if (icon && (icon.startsWith('http') || icon.startsWith('file:///'))) {
@@ -121,6 +152,7 @@ export default function ManualInputScreen() {
   };
 
   const activeColor = activeTab === 'moneyOut' ? '#EF4444' : '#10B981';
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -132,18 +164,12 @@ export default function ManualInputScreen() {
           </TouchableOpacity>
 
           <View style={styles.toggleContainer}>
-              <TouchableOpacity
-                onPress={() => setActiveTab('moneyOut')}
-                style={[styles.toggleButton, activeTab === 'moneyOut' && styles.toggleButtonActive]}
-              >
+              <TouchableOpacity onPress={() => setActiveTab('moneyOut')} style={[styles.toggleButton, activeTab === 'moneyOut' && styles.toggleButtonActive]}>
                 <Feather name="arrow-up-right" size={16} color={activeTab === 'moneyOut' ? COLORS.white : COLORS.gray600} />
                 <Text style={[styles.toggleText, activeTab === 'moneyOut' && styles.toggleTextActive]}>Money out</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={() => setActiveTab('moneyIn')}
-                style={[styles.toggleButton, activeTab === 'moneyIn' && styles.toggleButtonActive]}
-              >
+              <TouchableOpacity onPress={() => setActiveTab('moneyIn')} style={[styles.toggleButton, activeTab === 'moneyIn' && styles.toggleButtonActive]}>
                 <Feather name="arrow-down-left" size={16} color={activeTab === 'moneyIn' ? COLORS.white : COLORS.gray600} />
                 <Text style={[styles.toggleText, activeTab === 'moneyIn' && styles.toggleTextActive]}>Money in</Text>
               </TouchableOpacity>
@@ -154,7 +180,18 @@ export default function ManualInputScreen() {
           <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
               
               <View style={styles.centerContent}>
-                  <Text style={{ fontSize: 60, marginBottom: 16 }}>🦊</Text>
+                
+                  <View style={{ 
+                      width: 80, height: 80, borderRadius: 40, 
+                      backgroundColor: (activeBudgetObj?.color || COLORS.primary) + '20',
+                      alignItems: 'center', justifyContent: 'center',
+                      marginBottom: 16 
+                    }}>
+                      {activeBudgetObj 
+                        ? renderIcon(activeBudgetObj.icon, activeBudgetObj.color || COLORS.primary)
+                        : <Text style={{ fontSize: 40 }}>🦊</Text>
+                      }
+                  </View>
                   
                   <View style={styles.amountInputWrapper}>
                       <Text style={[styles.amountPrefix, { color: activeColor }]}>
@@ -194,11 +231,7 @@ export default function ManualInputScreen() {
 
               <View style={styles.bottomSheet}>
                   
-                  {/* 3. THANH PROGRESS BAR MỚI NHẤT */}
-                  <View style={[
-                      styles.progressBarContainer, 
-                      { backgroundColor: activeTab === 'moneyOut' ? '#FCA5A5' : '#86EFAC' }
-                  ]}>
+                  <View style={[styles.progressBarContainer, { backgroundColor: activeTab === 'moneyOut' ? '#FCA5A5' : '#86EFAC' }]}>
                       <View style={[
                           styles.progressBarFill, 
                           { width: `${spentPercentage}%`, backgroundColor: activeTab === 'moneyOut' ? '#EF4444' : '#16A34A' }
@@ -216,7 +249,6 @@ export default function ManualInputScreen() {
                       </View>
                   </View>
 
-                  {/* CHỌN NEED/WANT */}
                   {activeTab === 'moneyOut' && (
                     <View style={styles.evaluationWrapper}>
                       <Text style={styles.sectionTitle}>Evaluation</Text>
@@ -237,36 +269,63 @@ export default function ManualInputScreen() {
                     </View>
                   )}
 
-                  {/* DANH SÁCH BUDGET */}
                   <View style={styles.categoriesWrapper}>
-                      <Text style={styles.sectionTitle}>Select Budget</Text>
-                      {isLoading ? (
-                        <ActivityIndicator size="small" color={COLORS.primary} />
-                      ) : (
-                        <View style={styles.categoriesContainer}>
-                            {budgets.map((b) => (
-                                <TouchableOpacity
-                                  key={b.budgetId}
-                                  onPress={() => {
-                                      Keyboard.dismiss(); 
-                                      setSelectedBudget(b.budgetId);
-                                  }}
-                                  style={[
-                                    styles.categoryButton, 
-                                    selectedBudget === b.budgetId && styles.categoryButtonActive
-                                  ]}
-                                >
-                                  {renderIcon(b.icon, selectedBudget === b.budgetId ? COLORS.primary : COLORS.black)}
-                                  <Text style={[
-                                    styles.categoryButtonText, 
-                                    selectedBudget === b.budgetId && { color: COLORS.primary, fontWeight: '700' }
-                                  ]}>
-                                    {b.name}
-                                  </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                      )}
+                    {/* ✅ Tên section đổi theo tab */}
+                    <Text style={styles.sectionTitle}>
+                      {activeTab === 'moneyOut' ? 'Select Budget' : 'Select Wallet'}
+                    </Text>
+
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color={COLORS.primary} />
+                    ) : activeTab === 'moneyOut' ? (
+                      // ── MONEY OUT: Hiển thị danh sách Budget ──
+                      <View style={styles.categoriesContainer}>
+                        {budgets.map((b) => (
+                          <TouchableOpacity
+                            key={b.id}
+                            onPress={() => { Keyboard.dismiss(); setSelectedBudget(b.id); }}
+                            style={[
+                              styles.categoryButton,
+                              selectedBudget === b.id && styles.categoryButtonActive
+                            ]}
+                          >
+                            {renderIcon(b.icon, selectedBudget === b.id ? COLORS.primary : COLORS.black)}
+                            <Text style={[
+                              styles.categoryButtonText,
+                              selectedBudget === b.id && { color: COLORS.primary, fontWeight: '700' }
+                            ]}>
+                              {b.name || 'Unnamed'}
+                              {b.groupName ? ` (${b.groupName})` : ''}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    ) : (
+                      // ── MONEY IN: Hiển thị danh sách Wallet ──
+                      <View style={styles.categoriesContainer}>
+                        {wallets.map((w) => (
+                          <TouchableOpacity
+                            key={w.walletId}
+                            onPress={() => { Keyboard.dismiss(); setSelectedWallet(w.walletId); }}
+                            style={[
+                              styles.categoryButton,
+                              selectedWallet === w.walletId && styles.categoryButtonActive
+                            ]}
+                          >
+                            {/* Icon theo type ví */}
+                            <Text style={{ fontSize: 20 }}>
+                              {w.type === 'Bank' ? '🏦' : w.type === 'EWallet' ? '📱' : '💵'}
+                            </Text>
+                            <Text style={[
+                              styles.categoryButtonText,
+                              selectedWallet === w.walletId && { color: COLORS.primary, fontWeight: '700' }
+                            ]}>
+                              {w.name}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    )}
                   </View>
                   
                   <View style={{ height: 40 }} />
@@ -299,24 +358,9 @@ const styles = StyleSheet.create({
 
   bottomSheet: { backgroundColor: COLORS.white, shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 10, elevation: 10, flex: 1 },
   
-  /* ĐÃ SỬA LẠI CSS THANH PROGRESS BAR */
-  progressBarContainer: {
-    height: 60, 
-    position: 'relative',
-    overflow: 'hidden',
-    marginHorizontal: 0,
-  },
-  progressBarFill: {
-    position: 'absolute',
-    top: 0, left: 0, bottom: 0,
-  },
-  progressTextContainer: {
-    ...StyleSheet.absoluteFillObject,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
+  progressBarContainer: { height: 60, position: 'relative', overflow: 'hidden', marginHorizontal: 0 },
+  progressBarFill: { position: 'absolute', top: 0, left: 0, bottom: 0 },
+  progressTextContainer: { ...StyleSheet.absoluteFillObject, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24 },
   progressLabel: { fontSize: 12, color: COLORS.white, fontWeight: '600' },
   progressValue: { fontSize: 14, color: COLORS.white, fontWeight: 'bold' },
   

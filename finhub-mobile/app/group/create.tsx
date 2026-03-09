@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  Image, // 🆕 Import thêm Image để hiển thị ảnh
+  Image, 
+  Alert
 } from 'react-native';
 import { COLORS } from '@/constants/theme';
 import { useRouter } from 'expo-router';
-import * as ImagePicker from 'expo-image-picker'; // 🆕 Import Image Picker
+import * as ImagePicker from 'expo-image-picker'; 
+import axiosClient from '@/api/axiosClient';
 
 const CURRENCIES = [
   { code: 'VND', name: 'Viet Nam Dong' },
@@ -46,10 +48,40 @@ export default function CreateGroupScreen() {
     }
   };
 
-  const handleConfirm = () => {
-    // 🆕 Ghi log thêm cả imageUri để kiểm tra
-    console.log('Create group:', { groupName, selectedCurrency, description, imageUri });
-    router.push('/group/invite-share');
+  const handleConfirm = async () => {
+    // 1. Kiểm tra không được để trống tên
+    if (!groupName.trim()) {
+      Alert.alert('Lỗi', 'Vui lòng nhập tên nhóm!');
+      return;
+    }
+
+    try {
+      // 2. Gom dữ liệu gửi xuống Backend
+      const payload = {
+        name: groupName,
+        currency: selectedCurrency,
+        description: description,
+        imageUri: imageUri
+      };
+
+      console.log('Đang gửi API Create Group:', payload);
+
+      // 3. Gọi API POST /Group
+      const res = await axiosClient.post('/Group', payload);
+      
+      console.log('Tạo thành công:', res.data);
+      Alert.alert('Thành công', 'Nhóm đã được tạo!');
+      
+      // 4. Chuyển sang trang Invite Share kèm theo ID của nhóm vừa tạo
+      router.push({
+        pathname: '/group/invite-share',
+        params: { groupId: res.data.groupId, groupName: groupName }
+      });
+
+    } catch (error: any) {
+      console.error('Lỗi tạo nhóm:', error.response?.data || error.message);
+      Alert.alert('Lỗi', 'Không thể tạo nhóm lúc này. Vui lòng thử lại!');
+    }
   };
 
   return (

@@ -21,6 +21,7 @@ interface AuthState {
   logout: () => Promise<void>;
   clearError: () => void;
   loadToken: () => Promise<void>;
+  updateUser: (partial: Partial<User>) => void;
 }
 
 // Helper: fetch profile và trả về User object
@@ -38,6 +39,9 @@ const fetchProfile = async (token: string): Promise<User | null> => {
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
+  updateUser: (partial) => set((state) => ({
+    user: state.user ? { ...state.user, ...partial } : state.user
+  })),
   user: null,
   token: null,
   isLoading: false,

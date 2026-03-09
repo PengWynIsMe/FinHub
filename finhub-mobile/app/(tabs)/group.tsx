@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,12 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  ActivityIndicator
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import axiosClient from '@/api/axiosClient';
 
-// QUAN TRỌNG: Import Component và Type từ thư mục src
 import { GroupCard, GroupData } from "@/components/group/GroupCard"; 
 
 const COLORS = {
@@ -25,26 +26,28 @@ const COLORS = {
   btnJoin: '#EAF4FA',
 };
 
-// Dữ liệu giả lập
-const MOCK_GROUPS: GroupData[] = [
-  {
-    id: '1',
-    name: 'My Family <3',
-    role: 'Admin',
-    balance: '10,000,000',
-    coverImage: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=200&auto=format&fit=crop',
-    members: [
-      { id: 'm1', avatar: 'https://i.pravatar.cc/100?img=11' },
-      { id: 'm2', avatar: null },
-      { id: 'm3', avatar: null },
-      { id: 'm4', avatar: null },
-    ],
-  },
-];
-
 export default function GroupScreen() {
   const router = useRouter();
-  const [groups, setGroups] = useState<GroupData[]>(MOCK_GROUPS); 
+  const [groups, setGroups] = useState<GroupData[]>([]); 
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 🆕 TỰ ĐỘNG LẤY DATA THẬT KHI VÀO MÀN HÌNH
+  useFocusEffect(
+    useCallback(() => {
+      const fetchGroups = async () => {
+        try {
+          const res = await axiosClient.get('/Group');
+          setGroups(res.data);
+        } catch (error) {
+          console.error("Lỗi lấy danh sách nhóm:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchGroups();
+    }, [])
+  );
 
   const renderGroupList = () => (
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -62,7 +65,7 @@ export default function GroupScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* RENDER COMPONENT Ở ĐÂY */}
+      {/* RENDER COMPONENT */}
       {groups.map((group) => (
         <GroupCard key={group.id} group={group} />
       ))}
@@ -106,11 +109,20 @@ export default function GroupScreen() {
         <Text style={styles.headerTitle}>Role management</Text>
       </View>
 
-      {groups.length > 0 ? renderGroupList() : renderEmptyState()}
+      {/* Nếu đang tải thì quay đều */}
+      {isLoading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      ) : (
+        groups.length > 0 ? renderGroupList() : renderEmptyState()
+      )}
+      
     </SafeAreaView>
   );
 }
 
+// ─── CSS GIỮ NGUYÊN 100% CỦA BẠN ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header: {

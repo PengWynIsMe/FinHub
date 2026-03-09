@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput,
-  ScrollView, Platform, KeyboardAvoidingView, Keyboard, Image, ActivityIndicator
+  ScrollView, Platform, KeyboardAvoidingView, Keyboard, Image, ActivityIndicator, Alert
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import axiosClient from '@/api/axiosClient';
-import { Alert } from 'react-native';
 import { useAuthStore } from '@/stores/auth.store';
 
 const THEME_COLORS = ['#3B82F6', '#10B981', '#FF4267', '#F59E0B', '#8B5CF6', '#EC4899'];
@@ -19,6 +18,7 @@ export default function CreateSharedScreen() {
   const params = useLocalSearchParams();
   const type = params.type === 'goal' ? 'goal' : params.type === 'budget' ? 'budget' : 'wallet';
   const action = params.action === 'edit' ? 'edit' : 'create';
+  const groupId = params.groupId as string; // 👈 Lấy groupId từ params
 
   const [name, setName] = useState((params.name as string) || '');
   const [amount, setAmount] = useState((params.amount as string) || '');
@@ -29,6 +29,7 @@ export default function CreateSharedScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [budgetType, setBudgetType] = useState<'mandatory' | 'non-recurring'>('mandatory');
   const [isLoadingCat, setIsLoadingCat] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (type === 'budget') {
@@ -53,16 +54,21 @@ export default function CreateSharedScreen() {
 
   const headerTitle = isEdit ? `Edit ${type}` : `Create New ${type}`;
   const nameLabel = type === 'wallet' ? 'Wallet Name' : type === 'goal' ? 'Goal Name' : 'Budget Name';
-  const namePlaceholder = type === 'wallet' ? 'e.g. Daily Groceries' : type === 'goal' ? 'e.g. Family Trip to Japan' : 'e.g. Tiền chợ tháng 3';
-  const amountLabel = type === 'wallet' ? 'Allocated Amount (VNĐ)' : type === 'goal' ? 'Target Amount (VNĐ)' : 'Budget Amount (VNĐ)';
+  const namePlaceholder = type === 'wallet' ? 'e.g. Quỹ ăn nhậu' : type === 'goal' ? 'e.g. Family Trip to Japan' : 'e.g. Tiền chợ tháng 3';
+  const amountLabel = type === 'wallet' ? 'Initial Balance (Tùy chọn)' : type === 'goal' ? 'Target Amount (VNĐ)' : 'Budget Amount (VNĐ)';
 
-  // 🆕 FIX BUG 3: Logic bật nút Save (Bắt buộc có tiền & (có tên hoặc có category))
+  // 🆕 FIX BUG 3: Logic bật nút Save (Ví thì chỉ cần tên, không ép nhập tiền)
   const hasValidAmount = amount.toString().trim().length > 0;
   const hasNameOrCategory = name.trim().length > 0 || selectedCategory !== null;
   
-  const isFormValid = type === 'budget' 
-    ? (hasValidAmount && hasNameOrCategory) // Ngân sách: Cần tiền + (Tên hoặc Category)
-    : (hasValidAmount && name.trim().length > 0); // Goal/Wallet: Bắt buộc có tiền + tên
+  let isFormValid = false;
+  if (type === 'budget') {
+    isFormValid = hasValidAmount && hasNameOrCategory;
+  } else if (type === 'wallet') {
+    isFormValid = name.trim().length > 0; // Ví chung chỉ cần có tên là được
+  } else {
+    isFormValid = hasValidAmount && name.trim().length > 0;
+  }
 
   const handleAmountChange = (text: string) => {
     setAmount(text.replace(/[^0-9]/g, ''));
@@ -81,13 +87,42 @@ export default function CreateSharedScreen() {
   };
 
   const handleSubmit = async () => {
-    if (type === 'budget' && action === 'create') {
-      try {
+    setIsSubmitting(true);
+
+    try {
+      // ─── 1. XỬ LÝ TẠO VÍ CHUNG (SHARED WALLET) ───
+      if (type === 'wallet' && action === 'create') {
+        if (!groupId) {
+          Alert.alert("Lỗi", "Không tìm thấy thông tin Nhóm (GroupId)!");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const payload = {
+          name: name,
+          color: color,
+          icon: imageUri || "💼" 
+        };
+
+        await axiosClient.post(`/Group/${groupId}/wallets`, payload);
+        
+        Alert.alert("Thành công", "Đã tạo ví chung!");
+        router.back(); // Quay về danh sách ví chung
+        return;
+      }
+
+      // ─── 2. XỬ LÝ TẠO BUDGET (Giữ nguyên logic cũ của bạn) ───
+      if (type === 'budget' && action === 'create') {
         const selectedCatObj = categories.find(c => c.categoryId === selectedCategory);
         const finalIcon = imageUri || selectedCatObj?.icon || "dollar-sign";
 
+        const finalName = name.trim().length > 0 
+          ? name 
+          : (selectedCatObj?.name || 'Unnamed Budget');
+
+
         const budgetData = {
-          name: name,               
+          name: finalName,               
           amountLimit: parseFloat(amount),
           color: color,             
           icon: finalIcon, 
@@ -101,29 +136,30 @@ export default function CreateSharedScreen() {
         };
 
         const response = await axiosClient.post('/Budget', budgetData);
-
         if (response.status === 200 || response.status === 201) {
           Alert.alert("Success", `Đã tạo ngân sách thành công!`);
           router.replace('/(tabs)/home'); 
         }
-      } catch (error: any) {
-        console.error("Lỗi API chi tiết:", error.response?.data || error.message);
-        Alert.alert("Error", "Không thể lưu ngân sách. Vui lòng thử lại!");
+        return; 
       }
-      return; 
-    }
-    
-    if (isEdit) {
-      router.back();
-    } else {
-      if (type === 'wallet') router.replace(`/group/wallet-detail/new_wallet_123`);
-      else if (type === 'goal') router.replace(`/group/saving-detail/new_goal_123`);
+      
+      // Xử lý Goal hoặc Edit (Mặc định)
+      if (isEdit) {
+        router.back();
+      } else {
+        if (type === 'goal') router.replace(`/group/saving-detail/new_goal_123`);
+      }
+
+    } catch (error: any) {
+      console.error("Lỗi API chi tiết:", error.response?.data || error.message);
+      Alert.alert("Lỗi", "Không thể lưu dữ liệu. Vui lòng thử lại!");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const selectedCatIcon = categories.find(c => c.categoryId === selectedCategory)?.icon;
 
-  // 🆕 FIX BUG 1: Xóa bọc TouchableWithoutFeedback, thêm keyboardShouldPersistTaps vào ScrollView
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -137,7 +173,7 @@ export default function CreateSharedScreen() {
         <ScrollView 
           contentContainerStyle={styles.scrollContent} 
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled" // 👈 Chìa khóa vàng để Scroll mượt và tự ẩn bàn phím
+          keyboardShouldPersistTaps="handled" 
         >
           <View style={styles.formCard}>
             
@@ -164,11 +200,16 @@ export default function CreateSharedScreen() {
             <Text style={styles.inputLabel}>{nameLabel}</Text>
             <TextInput style={styles.input} placeholder={namePlaceholder} placeholderTextColor="#CACACA" value={name} onChangeText={setName} />
 
-            <Text style={styles.inputLabel}>{amountLabel}</Text>
-            <View style={styles.amountInputWrapper}>
-              <TextInput style={styles.amountInput} placeholder="0" placeholderTextColor="#CACACA" value={amount.replace(/\B(?=(\d{3})+(?!\d))/g, ".")} onChangeText={handleAmountChange} keyboardType="number-pad" />
-              <Text style={styles.currencySuffix}>VNĐ</Text>
-            </View>
+            {/* Chỉ hiện Amount Input nếu không phải tạo Wallet, hoặc vẫn muốn hiện cho đồng bộ UI thì để nguyên */}
+            {type !== 'wallet' && (
+              <>
+                <Text style={styles.inputLabel}>{amountLabel}</Text>
+                <View style={styles.amountInputWrapper}>
+                  <TextInput style={styles.amountInput} placeholder="0" placeholderTextColor="#CACACA" value={amount.replace(/\B(?=(\d{3})+(?!\d))/g, ".")} onChangeText={handleAmountChange} keyboardType="number-pad" />
+                  <Text style={styles.currencySuffix}>VNĐ</Text>
+                </View>
+              </>
+            )}
 
             {type === 'budget' && (
               <>
@@ -187,11 +228,7 @@ export default function CreateSharedScreen() {
                     <Text style={[styles.typeBtnText, budgetType === 'non-recurring' && styles.typeBtnTextActive]}>Non-recurring</Text>
                   </TouchableOpacity>
                 </View>
-              </>
-            )}
 
-            {type === 'budget' && (
-              <>
                 <Text style={styles.inputLabel}>Category</Text>
                 {isLoadingCat ? (
                   <ActivityIndicator size="small" color="#15476C" />
@@ -201,7 +238,6 @@ export default function CreateSharedScreen() {
                       <TouchableOpacity 
                         key={cat.categoryId} 
                         style={[styles.catItem, selectedCategory === cat.categoryId && { borderColor: color, backgroundColor: color + '10' }]}
-                        // 🆕 FIX BUG 2: Toggle Hủy Chọn (Bấm trùng ID thì set về null)
                         onPress={() => setSelectedCategory(selectedCategory === cat.categoryId ? null : cat.categoryId)}
                       >
                         <Feather name={cat.icon as any} size={24} color={selectedCategory === cat.categoryId ? color : '#9CA3AF'} />
@@ -213,7 +249,7 @@ export default function CreateSharedScreen() {
               </>
             )}
 
-            <Text style={[styles.inputLabel, {marginTop: 16}]}>Color Theme</Text>
+            <Text style={[styles.inputLabel, {marginTop: type==='wallet'? 0 : 16}]}>Color Theme</Text>
             <View style={styles.colorPickerRow}>
               {THEME_COLORS.map((c) => (
                 <TouchableOpacity key={c} style={[styles.colorCircle, { backgroundColor: c }, color === c && styles.colorCircleSelected]} onPress={() => setColor(c)} activeOpacity={0.8}>
@@ -224,10 +260,19 @@ export default function CreateSharedScreen() {
 
           </View>
 
-          <TouchableOpacity style={[styles.btnSubmit, isFormValid ? styles.btnActive : styles.btnDisabled]} disabled={!isFormValid} activeOpacity={0.8} onPress={handleSubmit}>
-            <Text style={[styles.btnText, !isFormValid && styles.btnTextDisabled]}>
-              {isEdit ? 'Save Changes' : `Create ${type === 'wallet' ? 'Wallet' : type === 'goal' ? 'Goal' : 'Budget'}`}
-            </Text>
+          <TouchableOpacity 
+            style={[styles.btnSubmit, isFormValid && !isSubmitting ? styles.btnActive : styles.btnDisabled]} 
+            disabled={!isFormValid || isSubmitting} 
+            activeOpacity={0.8} 
+            onPress={handleSubmit}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color={isFormValid ? "#FFFFFF" : "#15476C"} />
+            ) : (
+              <Text style={[styles.btnText, !isFormValid && styles.btnTextDisabled]}>
+                {isEdit ? 'Save Changes' : `Create ${type === 'wallet' ? 'Wallet' : type === 'goal' ? 'Goal' : 'Budget'}`}
+              </Text>
+            )}
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />
@@ -237,7 +282,6 @@ export default function CreateSharedScreen() {
   );
 }
 
-// ─── STYLES (Phần này giữ nguyên 100% của bạn) ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E3F6FF' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 20 },
@@ -267,7 +311,7 @@ const styles = StyleSheet.create({
   colorCircleSelected: { borderWidth: 3, borderColor: '#E3F6FF', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 5, elevation: 4 },
   btnSubmit: { height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
   btnActive: { backgroundColor: '#15476C', shadowColor: '#15476C', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
-  btnDisabled: { backgroundColor: '#FFFFFF' },
+  btnDisabled: { backgroundColor: '#F3F4F6' },
   btnText: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#FFFFFF' },
-  btnTextDisabled: { color: '#CACACA' },
+  btnTextDisabled: { color: '#9CA3AF' },
 });

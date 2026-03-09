@@ -163,8 +163,60 @@ namespace Finhub.API.Controllers
                 color = budget.Color,
                 allocated = budget.AmountLimit,
                 spent = spent,
-                transactions = transactions  // ✅ Thêm mới
+                transactions = transactions 
             });
+        }
+
+        // 🆕 API LẤY TẤT CẢ BUDGET (CÁ NHÂN) + VÍ CHUNG (NHÓM)
+        [HttpGet("all-accessible")]
+        public async Task<IActionResult> GetAllAccessibleBudgets()
+        {
+            var userId = GetUserId();
+            if (userId == Guid.Empty) return Unauthorized();
+
+            // 1. LẤY CÁC NGÂN SÁCH CÁ NHÂN (Loại bỏ các budget nằm trong ví nhóm)
+            var personalBudgets = await _context.Budgets
+                .Include(b => b.Wallet)
+                .Include(b => b.Category)
+                .Include(b => b.Transactions)
+                .Where(b => !b.Wallet.IsArchived && b.Wallet.OwnerUserId == userId && b.Wallet.GroupId == null)
+                .Select(b => new
+                {
+                    id = b.BudgetId.ToString(), // Dùng ID này cho UI
+                    name = b.Name ?? b.Category.Name ?? "Cá nhân",
+                    icon = b.Icon ?? b.Category.Icon ?? "💰",
+                    color = b.Color ?? "#15476C",
+                    allocated = b.AmountLimit,
+                    spent = b.Transactions != null ? b.Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount) : 0,
+                    walletId = b.WalletId.ToString(),
+                    isGroupWallet = false // 💡 Cờ đánh dấu để Frontend biết đây là Budget thật
+                })
+                .ToListAsync();
+
+            // 2. LẤY CÁC VÍ CHUNG CỦA NHÓM (Coi nó như 1 Budget để người dùng chi tiêu thẳng)
+            var sharedWallets = await _context.Wallets
+                .Include(w => w.Group).ThenInclude(g => g.GroupMembers)
+                .Include(w => w.Transactions)
+                .Where(w => !w.IsArchived && w.GroupId != null &&
+                            (w.OwnerUserId == userId || w.Group.OwnerId == userId || w.Group.GroupMembers.Any(gm => gm.UserId == userId)))
+                .Select(w => new
+                {
+                    id = w.WalletId.ToString(), // Ép WalletId làm ID để UI dễ hiển thị
+                    name = $"{w.Name} (Nhóm)", // Thêm chữ nhóm cho dễ phân biệt
+                    icon = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(w.Name)}&background=10B981&color=fff",
+                    color = w.Group.ThemeColor ?? "#10B981",
+                    // 💡 Với ví chung, Hạn mức (allocated) chính là TỔNG QUỸ (Số dư + Đã tiêu)
+                    allocated = w.CurrentBalance + (w.Transactions != null ? w.Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount) : 0),
+                    spent = w.Transactions != null ? w.Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount) : 0,
+                    walletId = w.WalletId.ToString(),
+                    isGroupWallet = true // 💡 Cờ đánh dấu đây là Ví Nhóm
+                })
+                .ToListAsync();
+
+            // 3. GỘP 2 DANH SÁCH LẠI VÀ TRẢ VỀ FRONTEND
+            var allAccessible = personalBudgets.Concat(sharedWallets).ToList();
+
+            return Ok(allAccessible);
         }
 
         [HttpPost]
