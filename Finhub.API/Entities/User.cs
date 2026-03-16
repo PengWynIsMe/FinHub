@@ -40,4 +40,6 @@ public partial class User
     public virtual ICollection<WalletMember> WalletMembers { get; set; } = new List<WalletMember>();
 
     public virtual ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
+
+    public virtual ICollection<GoalMember> GoalMembers { get; set; } = new List<GoalMember>();
 }

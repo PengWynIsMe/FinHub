@@ -25,9 +25,12 @@ public partial class FinhubDbContext : DbContext
 
     public virtual DbSet<Goal> Goals { get; set; }
 
+    public virtual DbSet<GoalMember> GoalMembers { get; set; }
+
     public virtual DbSet<Group> Groups { get; set; }
 
     public virtual DbSet<GroupMember> GroupMembers { get; set; }
+
 
     public virtual DbSet<Notification> Notifications { get; set; }
 

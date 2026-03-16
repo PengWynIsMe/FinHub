@@ -135,8 +135,8 @@ namespace Finhub.API.Controllers
             if (userId == Guid.Empty) return Unauthorized();
 
             var wallet = await _context.Wallets
-                .Include(w => w.Transactions) // 👈 Lấy giao dịch trực tiếp của ví (Nạp tiền)
-                .Include(w => w.Budgets).ThenInclude(b => b.Transactions) // Lấy giao dịch chi tiêu
+                .Include(w => w.Transactions).ThenInclude(t => t.User) // 👈 Lấy giao dịch + User
+                .Include(w => w.Budgets).ThenInclude(b => b.Transactions).ThenInclude(t => t.User) // Lấy giao dịch chi tiêu + User
                 .Include(w => w.Group).ThenInclude(g => g.GroupMembers).ThenInclude(gm => gm.User)
                 .Include(w => w.Group).ThenInclude(g => g.Owner)
                 .FirstOrDefaultAsync(w => w.WalletId == id);
@@ -194,8 +194,10 @@ namespace Finhub.API.Controllers
                     type = t.Type, // Trả về Type để Frontend tô màu (Xanh/Đỏ)
                     note = t.Note ?? (t.Type == "Income" ? "Nạp quỹ" : "Chi tiêu"),
                     date = t.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
-                    userName = t.Type == "Income" ? "Hệ thống" : "Thành viên",
-                    userAvatar = t.Type == "Income" ? "https://ui-avatars.com/api/?name=In&background=10B981&color=fff" : "https://i.pravatar.cc/100"
+                    userName = t.User?.FullName ?? (t.Type == "Income" ? "Hệ thống" : "Thành viên"),
+                    userAvatar = t.User != null
+                        ? (t.User.AvatarUrl ?? $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(t.User.FullName)}&background=15476C&color=fff")
+                        : (t.Type == "Income" ? "https://ui-avatars.com/api/?name=System&background=10B981&color=fff" : "https://ui-avatars.com/api/?name=User&background=9CA3AF&color=fff")
                 }).ToList();
 
             return Ok(new
@@ -227,7 +229,7 @@ namespace Finhub.API.Controllers
                 if (sourceWallet == null) return BadRequest(new { Message = "Không tìm thấy ví nguồn hoặc bạn không có quyền." });
                 if (sourceWallet.CurrentBalance < request.Amount) return BadRequest(new { Message = "Số dư ví không đủ để nạp quỹ." });
 
-                sourceWallet.CurrentBalance -= request.Amount; 
+                sourceWallet.CurrentBalance -= request.Amount;
 
                 var expenseTx = new Transaction
                 {
@@ -246,7 +248,7 @@ namespace Finhub.API.Controllers
                 var destWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.WalletId == request.DestinationWalletId);
                 if (destWallet == null) return BadRequest(new { Message = "Không tìm thấy ví nhóm." });
 
-                destWallet.CurrentBalance += request.Amount; 
+                destWallet.CurrentBalance += request.Amount;
 
                 // Ghi lại lịch sử nhận tiền cho Ví Chung
                 var incomeTx = new Transaction
@@ -264,7 +266,7 @@ namespace Finhub.API.Controllers
 
                 // 3. Lưu tất cả thay đổi
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync(); 
+                await transaction.CommitAsync();
 
                 return Ok(new { Message = "Nạp tiền vào quỹ thành công!" });
             }
@@ -273,6 +275,148 @@ namespace Finhub.API.Controllers
                 await transaction.RollbackAsync(); // Nếu lỗi thì Rollback
                 return StatusCode(500, new { Message = "Lỗi hệ thống khi nạp tiền", Error = ex.Message });
             }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteWallet(Guid id)
+        {
+            var userId = GetUserId();
+            if (userId == Guid.Empty) return Unauthorized();
+
+            var wallet = await _context.Wallets
+                .FirstOrDefaultAsync(w => w.WalletId == id && w.OwnerUserId == userId);
+
+            if (wallet == null) return NotFound(new { Message = "Không tìm thấy ví!" });
+
+            if (wallet.IsDefaultAccount)
+                return BadRequest(new { Message = "Không thể xóa ví mặc định." });
+
+            using var dbTransaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                if (wallet.CurrentBalance > 0)
+                {
+                    var defaultWallet = await _context.Wallets
+                        .FirstOrDefaultAsync(w => w.OwnerUserId == userId
+                                               && w.IsDefaultAccount
+                                               && !w.IsArchived
+                                               && w.GroupId == null);
+
+                    if (defaultWallet == null)
+                        return BadRequest(new { Message = "Không tìm thấy ví mặc định để hoàn tiền." });
+
+                    var refundAmount = wallet.CurrentBalance;
+                    defaultWallet.CurrentBalance += refundAmount;
+
+                    _context.Transactions.Add(new Transaction
+                    {
+                        TransactionId = Guid.NewGuid(),
+                        WalletId = defaultWallet.WalletId,
+                        UserId = userId,
+                        Amount = refundAmount,
+                        Type = "Income",
+                        Note = $"Hoàn tiền từ ví đã xóa: {wallet.Name}",
+                        Status = "Completed",
+                        TransactionDate = DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+
+                wallet.IsArchived = true;
+                wallet.CurrentBalance = 0;
+
+                await _context.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+
+                return Ok(new { Message = "Đã xóa ví và hoàn tiền về ví mặc định thành công!" });
+            }
+            catch (Exception ex)
+            {
+                await dbTransaction.RollbackAsync();
+                return StatusCode(500, new { Message = "Lỗi hệ thống khi xóa ví.", Error = ex.Message });
+            }
+        }
+
+        [HttpGet("{walletId}/settings")]
+        public async Task<IActionResult> GetWalletSettings(Guid walletId)
+        {
+            var userId = GetUserId();
+            if (userId == Guid.Empty) return Unauthorized();
+
+            var wallet = await _context.Wallets
+                .Include(w => w.Transactions) // 💡 Kéo Transactions để tính tổng nạp
+                .FirstOrDefaultAsync(w => w.WalletId == walletId);
+
+            if (wallet == null) return NotFound(new { Message = "Không tìm thấy ví!" });
+
+            var permission = await _context.AccountPermissions
+                .FirstOrDefaultAsync(p => p.WalletId == walletId && p.GranteeUserId != userId);
+
+            // 💡 Tính Tổng tiền nạp vào (Income) làm mốc 100% để tính phần trăm
+            var totalFunds = wallet.Transactions != null
+                ? wallet.Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount)
+                : 0;
+
+            // Nếu ví cá nhân không có Income, lấy CurrentBalance làm mốc
+            if (totalFunds == 0) totalFunds = wallet.CurrentBalance;
+
+            return Ok(new
+            {
+                alertEnabled = permission?.RequireRequestForOverLimit ?? false,
+                maxAmount = permission?.MaxAmountPerTransaction ?? 0,
+                totalFunds = totalFunds // 👈 Gửi cho Mobile để tính %
+            });
+        }
+
+        // 2. LƯU CÀI ĐẶT MỚI (Giữ nguyên như cũ)
+        [HttpPut("{walletId}/settings")]
+        public async Task<IActionResult> UpdateWalletSettings(Guid walletId, [FromBody] UpdateWalletSettingsRequest request)
+        {
+            var userId = GetUserId();
+            if (userId == Guid.Empty) return Unauthorized();
+
+            var wallet = await _context.Wallets
+                .Include(w => w.Group).ThenInclude(g => g.GroupMembers)
+                .FirstOrDefaultAsync(w => w.WalletId == walletId);
+
+            if (wallet == null) return NotFound(new { Message = "Không tìm thấy ví!" });
+
+            // Cập nhật cho tất cả thành viên (trừ chủ ví)
+            var members = wallet.Group?.GroupMembers.Where(m => m.UserId != wallet.OwnerUserId).ToList() ?? new List<GroupMember>();
+
+            foreach (var member in members)
+            {
+                var perm = await _context.AccountPermissions
+                    .FirstOrDefaultAsync(p => p.WalletId == walletId && p.GranteeUserId == member.UserId);
+
+                if (perm == null)
+                {
+                    perm = new AccountPermission
+                    {
+                        PermissionId = Guid.NewGuid(),
+                        WalletId = walletId,
+                        GranteeUserId = member.UserId,
+                        AccessLevel = "Member",
+                        RequireRequestForOverLimit = request.AlertEnabled,
+                        MaxAmountPerTransaction = request.MaxAmount
+                    };
+                    _context.AccountPermissions.Add(perm);
+                }
+                else
+                {
+                    perm.RequireRequestForOverLimit = request.AlertEnabled;
+                    perm.MaxAmountPerTransaction = request.MaxAmount;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { Message = "Đã lưu cài đặt thành công!" });
+        }
+
+        public class UpdateWalletSettingsRequest
+        {
+            public bool AlertEnabled { get; set; }
+            public decimal MaxAmount { get; set; }
         }
 
     }

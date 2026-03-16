@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Platform,
   ActivityIndicator
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import axiosClient from '@/api/axiosClient';
 
@@ -31,20 +31,22 @@ export default function GroupScreen() {
   const [groups, setGroups] = useState<GroupData[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🆕 TỰ ĐỘNG LẤY DATA THẬT KHI VÀO MÀN HÌNH
+  // 💡 1. KÉO HÀM NÀY RA NGOÀI ĐỂ DÙNG CHUNG
+  const fetchGroups = async () => {
+    try {
+      setIsLoading(true); // Để nó xoay xoay khi đang load lại dữ liệu
+      const res = await axiosClient.get('/Group');
+      setGroups(res.data);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách nhóm:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 💡 2. GỌI HÀM KHI MÀN HÌNH ĐƯỢC FOCUS
   useFocusEffect(
     useCallback(() => {
-      const fetchGroups = async () => {
-        try {
-          const res = await axiosClient.get('/Group');
-          setGroups(res.data);
-        } catch (error) {
-          console.error("Lỗi lấy danh sách nhóm:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
       fetchGroups();
     }, [])
   );
@@ -59,15 +61,19 @@ export default function GroupScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.btnJoin} activeOpacity={0.8}
-        onPress={() => console.log('Join Group')}
+        onPress={() => router.push('/join')}
         >
           <Text style={styles.btnJoinText}>Join</Text>
         </TouchableOpacity>
       </View>
 
-      {/* RENDER COMPONENT */}
+      {/* 💡 3. TRUYỀN HÀM fetchGroups VÀO onSuccess */}
       {groups.map((group) => (
-        <GroupCard key={group.id} group={group} />
+        <GroupCard 
+            key={group.id} 
+            group={group} 
+            onSuccess={fetchGroups} // <--- ĐIỂM ĂN TIỀN Ở ĐÂY
+        />
       ))}
       
       <View style={{ height: 100 }} />
@@ -90,7 +96,7 @@ export default function GroupScreen() {
       <TouchableOpacity
         style={[styles.card, styles.cardWhite]}
         activeOpacity={0.8}
-        onPress={() => console.log('Join Group')}
+        onPress={() => router.push('/join')}
       >
         <Text style={styles.cardTitleDark}>Join a Group</Text>
         <Text style={styles.cardDescriptionGray}>
@@ -102,15 +108,15 @@ export default function GroupScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Feather name="chevron-left" size={28} color={COLORS.textDark} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Role management</Text>
-      </View>
+      </View> */}
 
       {/* Nếu đang tải thì quay đều */}
-      {isLoading ? (
+      {isLoading && groups.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" color={COLORS.primary} />
         </View>

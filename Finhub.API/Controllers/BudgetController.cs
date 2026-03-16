@@ -35,7 +35,7 @@ namespace Finhub.API.Controllers
 
             // 1. Lấy tất cả ví của User
             var userWallets = await _context.Wallets
-                .Where(w => w.OwnerUserId == userId && !w.IsArchived)
+                .Where(w => w.OwnerUserId == userId && !w.IsArchived && w.GroupId == null) 
                 .ToListAsync();
 
             var totalWalletBalance = userWallets.Sum(w => w.CurrentBalance);
@@ -201,15 +201,19 @@ namespace Finhub.API.Controllers
                             (w.OwnerUserId == userId || w.Group.OwnerId == userId || w.Group.GroupMembers.Any(gm => gm.UserId == userId)))
                 .Select(w => new
                 {
-                    id = w.WalletId.ToString(), // Ép WalletId làm ID để UI dễ hiển thị
-                    name = $"{w.Name} (Nhóm)", // Thêm chữ nhóm cho dễ phân biệt
+                    id = w.WalletId.ToString(),
+                    name = $"{w.Name}",
                     icon = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(w.Name)}&background=10B981&color=fff",
                     color = w.Group.ThemeColor ?? "#10B981",
-                    // 💡 Với ví chung, Hạn mức (allocated) chính là TỔNG QUỸ (Số dư + Đã tiêu)
-                    allocated = w.CurrentBalance + (w.Transactions != null ? w.Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount) : 0),
-                    spent = w.Transactions != null ? w.Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount) : 0,
+
+                    // 💡 ĐÃ FIX: Chỉ tính Income đã Completed
+                    allocated = w.Transactions != null ? w.Transactions.Where(t => t.Type == "Income" && t.Status == "Completed").Sum(t => t.Amount) : 0,
+
+                    // 💡 ĐÃ FIX: Chỉ tính Expense đã Completed
+                    spent = w.Transactions != null ? w.Transactions.Where(t => t.Type == "Expense" && t.Status == "Completed").Sum(t => t.Amount) : 0,
+
                     walletId = w.WalletId.ToString(),
-                    isGroupWallet = true // 💡 Cờ đánh dấu đây là Ví Nhóm
+                    isGroupWallet = true
                 })
                 .ToListAsync();
 

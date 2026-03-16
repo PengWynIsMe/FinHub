@@ -36,38 +36,37 @@ export default function ManualInputScreen() {
 
   // FETCH DATA
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const [budgetRes, walletRes] = await Promise.all([
-        axiosClient.get('/Budget/all-accessible'),
-        axiosClient.get('/Wallet'),
-      ]);
+    const fetchData = async () => {
+      try {
+        const [budgetRes, walletRes] = await Promise.all([
+          axiosClient.get('/Budget/all-accessible'),
+          axiosClient.get('/Wallet'),
+        ]);
 
-      const allBudgets = budgetRes.data;
-      setBudgets(allBudgets);
-      if (allBudgets.length > 0) setSelectedBudget(allBudgets[0].id);
-      // console.log('budget keys:', allBudgets.map((b: any) => b.budgetId));
-      // console.log('budget object keys:', Object.keys(allBudgets[0]));
-      // console.log('first budget:', JSON.stringify(allBudgets[0], null, 2));
+        const allBudgets = budgetRes.data;
+        setBudgets(allBudgets);
+        if (allBudgets.length > 0) setSelectedBudget(allBudgets[0].id);
 
-      const allWallets = walletRes.data;
-      setWallets(allWallets);
-      if (allWallets.length > 0) setSelectedWallet(allWallets[0].walletId);
-      console.log('wallet keys:', allWallets.map((w: any) => w.walletId));
+        const allWallets = walletRes.data;
+        setWallets(allWallets);
+        if (allWallets.length > 0) setSelectedWallet(allWallets[0].walletId);
 
-    } catch (error) {
-      console.error("Lỗi lấy dữ liệu:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  fetchData();
-}, []);
+      } catch (error) {
+        console.error("Lỗi lấy dữ liệu:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  // 💡 LỌC DANH SÁCH THÀNH 2 NHÓM RIÊNG BIỆT
+  const personalBudgets = budgets.filter(b => !b.isGroupWallet);
+  const groupWallets = budgets.filter(b => b.isGroupWallet);
 
   // LOGIC THANH CHẠY (PROGRESS BAR)
   const rawAmount = parseFloat(amount.replace(/\./g, '')) || 0;
   
-  // 💡 ĐÃ SỬA: Đổi budgetId thành id
   const activeBudgetObj = budgets.find(b => b.id === selectedBudget);
   const allocated = activeBudgetObj?.allocated || 0;
   const currentSpent = activeBudgetObj?.spent || 0;
@@ -93,53 +92,51 @@ export default function ManualInputScreen() {
   };
 
   const handleSave = async () => {
-  if (!amount || amount === '0') {
-    Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
-    return;
-  }
-
-  try {
-    let transactionData: any;
-
-    if (activeTab === 'moneyOut') {
-      // Chi tiêu — dùng budget
-      if (!activeBudgetObj) {
-        Alert.alert('Lỗi', 'Vui lòng chọn ngân sách!');
-        return;
-      }
-      transactionData = {
-        walletId: activeBudgetObj.walletId,
-        budgetId: activeBudgetObj.id,
-        amount: rawAmount,
-        type: 'Expense',
-        note: note,
-        evaluation: evaluation
-      };
-    } else {
-      // Nạp tiền — dùng wallet
-      if (!selectedWallet) {
-        Alert.alert('Lỗi', 'Vui lòng chọn ví!');
-        return;
-      }
-      transactionData = {
-        walletId: selectedWallet,
-        budgetId: null,   // ✅ Không gắn vào budget nào
-        amount: rawAmount,
-        type: 'Income',
-        note: note,
-        evaluation: null
-      };
+    if (!amount || amount === '0') {
+      Alert.alert('Lỗi', 'Vui lòng nhập số tiền hợp lệ!');
+      return;
     }
 
-    await axiosClient.post('/Transaction', transactionData);
-    Keyboard.dismiss();
-    Alert.alert('Thành công', 'Đã lưu giao dịch!');
-    router.back();
-  } catch (error: any) {
-    console.error("Lỗi khi lưu:", error);
-    Alert.alert('Lỗi', 'Không thể lưu giao dịch lúc này.');
-  }
-};
+    try {
+      let transactionData: any;
+
+      if (activeTab === 'moneyOut') {
+        if (!activeBudgetObj) {
+          Alert.alert('Lỗi', 'Vui lòng chọn nguồn tiền!');
+          return;
+        }
+        transactionData = {
+          walletId: activeBudgetObj.walletId,
+          budgetId: activeBudgetObj.isGroupWallet ? null : activeBudgetObj.id, // Sửa logic tránh lỗi DB
+          amount: rawAmount,
+          type: 'Expense',
+          note: note,
+          evaluation: evaluation
+        };
+      } else {
+        if (!selectedWallet) {
+          Alert.alert('Lỗi', 'Vui lòng chọn ví!');
+          return;
+        }
+        transactionData = {
+          walletId: selectedWallet,
+          budgetId: null,
+          amount: rawAmount,
+          type: 'Income',
+          note: note,
+          evaluation: null
+        };
+      }
+
+      await axiosClient.post('/Transaction', transactionData);
+      Keyboard.dismiss();
+      Alert.alert('Thành công', 'Đã lưu giao dịch!');
+      router.back();
+    } catch (error: any) {
+      console.error("Lỗi khi lưu:", error);
+      Alert.alert('Lỗi', 'Không thể lưu giao dịch lúc này.');
+    }
+  };
 
   const renderIcon = (icon: string | null, color: string) => {
     if (icon && (icon.startsWith('http') || icon.startsWith('file:///'))) {
@@ -153,7 +150,6 @@ export default function ManualInputScreen() {
 
   const activeColor = activeTab === 'moneyOut' ? '#EF4444' : '#10B981';
   
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -180,7 +176,6 @@ export default function ManualInputScreen() {
           <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
               
               <View style={styles.centerContent}>
-                
                   <View style={{ 
                       width: 80, height: 80, borderRadius: 40, 
                       backgroundColor: (activeBudgetObj?.color || COLORS.primary) + '20',
@@ -270,60 +265,91 @@ export default function ManualInputScreen() {
                   )}
 
                   <View style={styles.categoriesWrapper}>
-                    {/* ✅ Tên section đổi theo tab */}
-                    <Text style={styles.sectionTitle}>
-                      {activeTab === 'moneyOut' ? 'Select Budget' : 'Select Wallet'}
-                    </Text>
-
                     {isLoading ? (
                       <ActivityIndicator size="small" color={COLORS.primary} />
                     ) : activeTab === 'moneyOut' ? (
-                      // ── MONEY OUT: Hiển thị danh sách Budget ──
-                      <View style={styles.categoriesContainer}>
-                        {budgets.map((b) => (
-                          <TouchableOpacity
-                            key={b.id}
-                            onPress={() => { Keyboard.dismiss(); setSelectedBudget(b.id); }}
-                            style={[
-                              styles.categoryButton,
-                              selectedBudget === b.id && styles.categoryButtonActive
-                            ]}
-                          >
-                            {renderIcon(b.icon, selectedBudget === b.id ? COLORS.primary : COLORS.black)}
-                            <Text style={[
-                              styles.categoryButtonText,
-                              selectedBudget === b.id && { color: COLORS.primary, fontWeight: '700' }
-                            ]}>
-                              {b.name || 'Unnamed'}
-                              {b.groupName ? ` (${b.groupName})` : ''}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
+                      // ── MONEY OUT: HIỂN THỊ 2 DANH SÁCH TÁCH BIỆT ──
+                      <View>
+                        {/* Nhóm 1: Ngân sách cá nhân */}
+                        {personalBudgets.length > 0 && (
+                          <View style={{ marginBottom: 20 }}>
+                            <Text style={styles.sectionTitle}>Personal Budgets</Text>
+                            <View style={styles.categoriesContainer}>
+                              {personalBudgets.map((b) => (
+                                <TouchableOpacity
+                                  key={b.id}
+                                  onPress={() => { Keyboard.dismiss(); setSelectedBudget(b.id); }}
+                                  style={[
+                                    styles.categoryButton,
+                                    selectedBudget === b.id && styles.categoryButtonActive
+                                  ]}
+                                >
+                                  {renderIcon(b.icon, selectedBudget === b.id ? COLORS.primary : COLORS.black)}
+                                  <Text style={[
+                                    styles.categoryButtonText,
+                                    selectedBudget === b.id && { color: COLORS.primary, fontWeight: '700' }
+                                  ]}>
+                                    {b.name || 'Unnamed'}
+                                  </Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+                        )}
+
+                        {/* Nhóm 2: Ví chung / Quỹ Nhóm */}
+                        {groupWallets.length > 0 && (
+                          <View>
+                            <Text style={styles.sectionTitle}>Group Wallets</Text>
+                            <View style={styles.categoriesContainer}>
+                              {groupWallets.map((b) => (
+                                <TouchableOpacity
+                                  key={b.id}
+                                  onPress={() => { Keyboard.dismiss(); setSelectedBudget(b.id); }}
+                                  style={[
+                                    styles.categoryButton,
+                                    selectedBudget === b.id && styles.categoryButtonActive
+                                  ]}
+                                >
+                                  {renderIcon(b.icon, selectedBudget === b.id ? COLORS.primary : COLORS.black)}
+                                  <Text style={[
+                                    styles.categoryButtonText,
+                                    selectedBudget === b.id && { color: COLORS.primary, fontWeight: '700' }
+                                  ]}>
+                                    {b.name || 'Unnamed'}
+                                  </Text>
+                                </TouchableOpacity>
+                              ))}
+                            </View>
+                          </View>
+                        )}
                       </View>
                     ) : (
-                      // ── MONEY IN: Hiển thị danh sách Wallet ──
-                      <View style={styles.categoriesContainer}>
-                        {wallets.map((w) => (
-                          <TouchableOpacity
-                            key={w.walletId}
-                            onPress={() => { Keyboard.dismiss(); setSelectedWallet(w.walletId); }}
-                            style={[
-                              styles.categoryButton,
-                              selectedWallet === w.walletId && styles.categoryButtonActive
-                            ]}
-                          >
-                            {/* Icon theo type ví */}
-                            <Text style={{ fontSize: 20 }}>
-                              {w.type === 'Bank' ? '🏦' : w.type === 'EWallet' ? '📱' : '💵'}
-                            </Text>
-                            <Text style={[
-                              styles.categoryButtonText,
-                              selectedWallet === w.walletId && { color: COLORS.primary, fontWeight: '700' }
-                            ]}>
-                              {w.name}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
+                      // ── MONEY IN: HIỂN THỊ DANH SÁCH WALLET BÌNH THƯỜNG ──
+                      <View>
+                        <Text style={styles.sectionTitle}>Select Destination Wallet</Text>
+                        <View style={styles.categoriesContainer}>
+                          {wallets.map((w) => (
+                            <TouchableOpacity
+                              key={w.walletId}
+                              onPress={() => { Keyboard.dismiss(); setSelectedWallet(w.walletId); }}
+                              style={[
+                                styles.categoryButton,
+                                selectedWallet === w.walletId && styles.categoryButtonActive
+                              ]}
+                            >
+                              <Text style={{ fontSize: 20 }}>
+                                {w.type === 'Bank' ? '🏦' : w.type === 'EWallet' ? '📱' : '💵'}
+                              </Text>
+                              <Text style={[
+                                styles.categoryButtonText,
+                                selectedWallet === w.walletId && { color: COLORS.primary, fontWeight: '700' }
+                              ]}>
+                                {w.name}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
                       </View>
                     )}
                   </View>
@@ -372,7 +398,7 @@ const styles = StyleSheet.create({
   evalTextActive: { color: COLORS.primary, fontWeight: '700' },
 
   categoriesWrapper: { padding: 24 },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#6B7280', marginBottom: 12 },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: '#6B7280', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
   categoriesContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   categoryButton: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 12, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: 'transparent' },
   categoryButtonActive: { backgroundColor: '#E3F6FF', borderColor: COLORS.primary },

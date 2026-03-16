@@ -1,29 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
+import QRCode from 'react-native-qrcode-svg';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
-  Dimensions,
-  Animated,
-  StatusBar,
-  Alert,
-  Platform,
+  View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
+  Dimensions, Animated, StatusBar, Alert, Platform, Modal
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { COLORS } from '@/constants/theme';
-
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import axiosClient from '@/api/axiosClient';
 
 const { width, height } = Dimensions.get('window');
 
 // ─── THÔNG SỐ KHUNG QUÉT ───
-const SCAN_FRAME_SIZE = width * 0.7; // Tăng lên 70% màn hình cho dễ quét
-const CUTOUT_RADIUS = 24; // Độ bo tròn của cái lỗ hổng
-const BORDER_WIDTH = 1000; // Viền khổng lồ để che toàn màn hình
+const SCAN_FRAME_SIZE = width * 0.7; 
+const CUTOUT_RADIUS = 24; 
+const BORDER_WIDTH = 1000; 
 
 export default function ScanScreen() {
   const router = useRouter();
@@ -34,6 +26,35 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const scanLinePosition = useRef(new Animated.Value(0)).current;
 
+  // ─── STATE CHO TÍNH NĂNG "MÃ CỦA TÔI" ───
+  const [isMyQrVisible, setIsMyQrVisible] = useState(false);
+  const [userInfo, setUserInfo] = useState({ id: '', name: '', avatar: '' });
+
+  // 💡 Lấy thông tin Profile thực tế từ Backend khi vừa vào màn hình
+  useEffect(() => {
+    const fetchMyProfile = async () => {
+      try {
+        const res = await axiosClient.get('/User/me');
+        setUserInfo({
+          id: res.data.userId, // Map đúng với thuộc tính UserId của C#
+          name: res.data.fullName, 
+          avatar: res.data.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(res.data.fullName)}&background=15476C&color=fff`
+        });
+      } catch (error) {
+        console.error("Lỗi lấy profile:", error);
+      }
+    };
+    fetchMyProfile();
+  }, []);
+
+  // 💡 Dữ liệu nhúng vào QR Code
+  const myQrData = JSON.stringify({
+    action: 'transfer',
+    userId: userInfo.id,
+    name: userInfo.name
+  });
+
+  // Hiệu ứng Tia Laser
   useEffect(() => {
     Animated.loop(
       Animated.sequence([
@@ -51,16 +72,59 @@ export default function ScanScreen() {
     ).start();
   }, [scanLinePosition]);
 
+  // 💡 Xử lý khi Quét được mã (QR của người khác)
+  // 💡 Xử lý khi Quét được mã
   const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
     setScanned(true); 
-    Alert.alert(
-      "Đã quét được mã!",
-      `Nội dung: ${data}`,
-      [
-        { text: "Quét lại", onPress: () => setScanned(false) },
-        { text: "Xử lý", onPress: () => { console.log("Dữ liệu QR:", data); router.back(); } }
-      ]
-    );
+    
+    try {
+      const parsedData = JSON.parse(data);
+      
+      if (parsedData.action === 'transfer') {
+        Alert.alert(
+          "Nhận diện tài khoản!", 
+          `Bạn đang chuyển tiền cho: ${parsedData.name}`,
+          [
+            { text: "Hủy", onPress: () => setScanned(false), style: 'cancel' },
+            { text: "Tiếp tục", onPress: () => {
+              console.log("Điều hướng tới userId:", parsedData.userId);
+              router.back();
+            }}
+          ]
+        );
+      } 
+      // 💡 NHÁNH MỚI: XỬ LÝ QUÉT MÃ MỜI VÀO NHÓM
+      else if (parsedData.action === 'join_group') {
+        Alert.alert(
+          "Lời mời vào nhóm", 
+          `Bạn được mời tham gia nhóm: ${parsedData.groupName || 'Mới'}`,
+          [
+            { text: "Hủy", onPress: () => setScanned(false), style: 'cancel' },
+            { text: "Tham gia ngay", onPress: async () => {
+                try {
+                  // Gọi API tham gia nhóm với inviteCode
+                  await axiosClient.post('/Group/join', { inviteCode: parsedData.inviteCode });
+                  Alert.alert("Thành công 🎉", "Bạn đã tham gia nhóm thành công!", [
+                    { text: "Xem nhóm", onPress: () => {
+                        // Trở về trang quản lý hoặc bay thẳng vào nhóm đó
+                        router.back(); 
+                    }}
+                  ]);
+                } catch (error: any) {
+                  Alert.alert("Lỗi", error.response?.data?.Message || "Không thể tham gia nhóm lúc này.", [
+                    { text: "Đóng", onPress: () => setScanned(false) }
+                  ]);
+                }
+            }}
+          ]
+        );
+      } 
+      else {
+        Alert.alert("Quét thành công", data, [{ text: "OK", onPress: () => setScanned(false) }]);
+      }
+    } catch (e) {
+      Alert.alert("Nội dung mã:", data, [{ text: "OK", onPress: () => setScanned(false) }]);
+    }
   };
 
   const pickImageFromGallery = async () => {
@@ -101,7 +165,6 @@ export default function ScanScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
       
-      {/* 1. CAMERA THẬT (DƯỚI CÙNG) */}
       <CameraView 
         style={StyleSheet.absoluteFillObject} 
         facing="back"
@@ -110,26 +173,20 @@ export default function ScanScreen() {
         onBarcodeScanned={scanned || scanMode === 'OCR' ? undefined : handleBarCodeScanned}
       />
 
-      {/* 2. LỚP PHỦ TỐI CÓ LỖ HỔNG BO TRÒN BÊN TRONG (Massive Border Trick) */}
       <View style={styles.maskContainer}>
         <View style={styles.cutout} />
       </View>
 
-      {/* 3. KHUNG SÁNG, GÓC VIỀN VÀ TIA LASER */}
       <View style={styles.scanFrameWrapper}>
         <View style={styles.scanFrame}>
-          {/* 4 Góc trắng bo theo khung */}
           <View style={[styles.corner, styles.cornerTL]} />
           <View style={[styles.corner, styles.cornerTR]} />
           <View style={[styles.corner, styles.cornerBL]} />
           <View style={[styles.corner, styles.cornerBR]} />
-
-          {/* Tia Laser */}
           <Animated.View style={[styles.scanLine, { transform: [{ translateY: scanLinePosition }] }]} />
         </View>
       </View>
 
-      {/* 4. HEADER (NÚT X VÀ FLASH - ĐÃ ĐƯỢC ĐẨY XUỐNG) */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.iconBtn}>
           <Feather name="x" size={28} color="#FFF" />
@@ -139,33 +196,23 @@ export default function ScanScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* 5. TEXT HƯỚNG DẪN */}
       <Text style={styles.instructionText}>
         {scanMode === 'QR' ? 'Đưa mã QR vào khung hình' : 'Đưa hóa đơn vào khung hình'}
       </Text>
 
-      {/* 6. BOTTOM CONTROLS */}
       <View style={styles.bottomSection}>
-        {/* TABS CHẾ ĐỘ QUÉT */}
         <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tabBtn, scanMode === 'QR' && styles.tabBtnActive]}
-            onPress={() => setScanMode('QR')}
-          >
+          <TouchableOpacity style={[styles.tabBtn, scanMode === 'QR' && styles.tabBtnActive]} onPress={() => setScanMode('QR')}>
             <MaterialCommunityIcons name="qrcode-scan" size={20} color={scanMode === 'QR' ? '#FFF' : '#9CA3AF'} />
             <Text style={[styles.tabText, scanMode === 'QR' && styles.tabTextActive]}>QR Payment</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.tabBtn, scanMode === 'OCR' && styles.tabBtnActive]}
-            onPress={() => setScanMode('OCR')}
-          >
+          <TouchableOpacity style={[styles.tabBtn, scanMode === 'OCR' && styles.tabBtnActive]} onPress={() => setScanMode('OCR')}>
             <Ionicons name="receipt-outline" size={20} color={scanMode === 'OCR' ? '#FFF' : '#9CA3AF'} />
             <Text style={[styles.tabText, scanMode === 'OCR' && styles.tabTextActive]}>Scan Receipt</Text>
           </TouchableOpacity>
         </View>
 
-        {/* NÚT THƯ VIỆN & MÃ CỦA TÔI */}
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.actionBtn} onPress={pickImageFromGallery}>
             <View style={styles.actionIconBox}>
@@ -174,8 +221,9 @@ export default function ScanScreen() {
             <Text style={styles.actionBtnText}>Thư viện</Text>
           </TouchableOpacity>
 
+          {/* 💡 NÚT MỞ MÃ QR CỦA TÔI */}
           {scanMode === 'QR' && (
-            <TouchableOpacity style={styles.actionBtn}>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => setIsMyQrVisible(true)}>
               <View style={styles.actionIconBox}>
                 <Ionicons name="qr-code" size={24} color="#FFF" />
               </View>
@@ -184,6 +232,41 @@ export default function ScanScreen() {
           )}
         </View>
       </View>
+
+      {/* ─── MODAL: MÃ QR CỦA TÔI ─── */}
+      <Modal visible={isMyQrVisible} transparent={true} animationType="slide" onRequestClose={() => setIsMyQrVisible(false)}>
+        <View style={styles.qrModalOverlay}>
+          <View style={styles.qrModalContent}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: 20}}>
+              <Text style={styles.qrModalTitle}>Mã nhận tiền</Text>
+              <TouchableOpacity onPress={() => setIsMyQrVisible(false)} style={{padding: 4}}>
+                <Feather name="x" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.qrCodeWrapper}>
+              <QRCode
+                value={myQrData}
+                size={220}
+                color="#15476C"
+                backgroundColor="#FFFFFF"
+                logo={{ uri: userInfo.avatar || 'https://ui-avatars.com/api/?name=U' }} 
+                logoSize={46}
+                logoBackgroundColor='#fff'
+                logoBorderRadius={23}
+              />
+            </View>
+
+            <Text style={styles.qrUserName}>{userInfo.name || 'Đang tải...'}</Text>
+            <Text style={styles.qrHelperText}>Đưa mã này cho người khác quét để nhận tiền nhanh chóng.</Text>
+
+            <TouchableOpacity style={styles.btnDownloadQr} onPress={() => Alert.alert('Thành công', 'Tính năng tải mã đang được phát triển!')}>
+              <Feather name="download" size={20} color="#15476C" style={{marginRight: 8}} />
+              <Text style={styles.btnDownloadText}>Tải mã xuống</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
@@ -194,91 +277,37 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   permissionBtn: { backgroundColor: '#15476C', padding: 12, borderRadius: 20, marginTop: 10 },
   permissionBtnText: { color: '#FFF', fontSize: 16, fontWeight: '600' },
-
-  // ─── MASK CONTAINER TRICK (Bo góc mượt mà) ───
-  maskContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  cutout: {
-    width: SCAN_FRAME_SIZE + BORDER_WIDTH * 2,
-    height: SCAN_FRAME_SIZE + BORDER_WIDTH * 2,
-    borderWidth: BORDER_WIDTH,
-    borderColor: 'rgba(0,0,0,0.65)',
-    borderRadius: BORDER_WIDTH + CUTOUT_RADIUS, // Bí quyết làm viền trong bo góc
-    position: 'absolute',
-  },
-
-  // ─── KHUNG QUÉT CHÍNH (Góc trắng + Laser) ───
-  scanFrameWrapper: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 2,
-  },
-  scanFrame: {
-    width: SCAN_FRAME_SIZE,
-    height: SCAN_FRAME_SIZE,
-    backgroundColor: 'transparent',
-    borderRadius: CUTOUT_RADIUS,
-    overflow: 'hidden', // Ép laser và góc trắng không lọt ra ngoài vùng bo
-  },
-  
-  // 4 Góc trắng
+  maskContainer: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', zIndex: 1 },
+  cutout: { width: SCAN_FRAME_SIZE + BORDER_WIDTH * 2, height: SCAN_FRAME_SIZE + BORDER_WIDTH * 2, borderWidth: BORDER_WIDTH, borderColor: 'rgba(0,0,0,0.65)', borderRadius: BORDER_WIDTH + CUTOUT_RADIUS, position: 'absolute' },
+  scanFrameWrapper: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', zIndex: 2 },
+  scanFrame: { width: SCAN_FRAME_SIZE, height: SCAN_FRAME_SIZE, backgroundColor: 'transparent', borderRadius: CUTOUT_RADIUS, overflow: 'hidden' },
   corner: { position: 'absolute', width: 40, height: 40, borderColor: '#FFF', borderWidth: 4 },
   cornerTL: { top: 0, left: 0, borderBottomWidth: 0, borderRightWidth: 0, borderTopLeftRadius: CUTOUT_RADIUS },
   cornerTR: { top: 0, right: 0, borderBottomWidth: 0, borderLeftWidth: 0, borderTopRightRadius: CUTOUT_RADIUS },
   cornerBL: { bottom: 0, left: 0, borderTopWidth: 0, borderRightWidth: 0, borderBottomLeftRadius: CUTOUT_RADIUS },
   cornerBR: { bottom: 0, right: 0, borderTopWidth: 0, borderLeftWidth: 0, borderBottomRightRadius: CUTOUT_RADIUS },
-
-  // Tia Laser
   scanLine: { width: '100%', height: 3, backgroundColor: '#38BDF8', shadowColor: '#38BDF8', shadowOpacity: 1, shadowRadius: 10, elevation: 5 },
-
-  // ─── HEADER (ĐÃ ĐẨY XUỐNG TRÁNH TAI THỎ) ───
-  header: { 
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 40) + 20, // Tự căn chuẩn theo iOS/Android
-    left: 20,
-    right: 20,
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    zIndex: 10,
-  },
+  header: { position: 'absolute', top: Platform.OS === 'ios' ? 60 : (StatusBar.currentHeight || 40) + 20, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 },
   iconBtn: { padding: 12, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 24 },
-
-  // ─── TEXT HƯỚNG DẪN ───
-  instructionText: { 
-    position: 'absolute',
-    top: (height / 2) + (SCAN_FRAME_SIZE / 2) + 30, // Nằm ngay dưới khung quét
-    width: '100%',
-    color: '#FFF', 
-    fontSize: 16, 
-    fontWeight: '500', 
-    textAlign: 'center', 
-    zIndex: 10,
-  },
-
-  // ─── BOTTOM CONTROLS ───
-  bottomSection: { 
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 40 : 30,
-    left: 0,
-    right: 0,
-    alignItems: 'center', 
-    zIndex: 10,
-  },
-  
+  instructionText: { position: 'absolute', top: (height / 2) + (SCAN_FRAME_SIZE / 2) + 30, width: '100%', color: '#FFF', fontSize: 16, fontWeight: '500', textAlign: 'center', zIndex: 10 },
+  bottomSection: { position: 'absolute', bottom: Platform.OS === 'ios' ? 40 : 30, left: 0, right: 0, alignItems: 'center', zIndex: 10 },
   tabContainer: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 30, padding: 6, marginBottom: 30 },
   tabBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 24 },
   tabBtnActive: { backgroundColor: '#15476C' }, 
   tabText: { color: '#9CA3AF', fontSize: 14, fontWeight: '600', marginLeft: 8 },
   tabTextActive: { color: '#FFF' },
-
   actionRow: { flexDirection: 'row', justifyContent: 'center', gap: 60, width: '100%' },
   actionBtn: { alignItems: 'center', justifyContent: 'center' },
   actionIconBox: { width: 56, height: 56, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   actionBtnText: { color: '#FFF', fontSize: 13, fontWeight: '500', marginTop: 10 },
+
+  // ─── STYLES CHO MODAL QR ───
+  qrModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  qrModalContent: { width: '100%', backgroundColor: '#FFF', borderRadius: 24, padding: 24, alignItems: 'center' },
+  qrModalTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: '#1F2937' },
+  qrCodeWrapper: { padding: 16, backgroundColor: '#FFF', borderRadius: 24, borderWidth: 1, borderColor: '#E5E7EB', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: {width: 0, height: 4}, marginBottom: 20 },
+  qrUserName: { fontFamily: 'Poppins_600SemiBold', fontSize: 20, color: '#15476C', marginBottom: 8 },
+  qrHelperText: { fontFamily: 'Poppins_400Regular', fontSize: 14, color: '#6B7280', textAlign: 'center', marginBottom: 24, paddingHorizontal: 10 },
+  btnDownloadQr: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E3F6FF', paddingVertical: 14, paddingHorizontal: 24, borderRadius: 16 },
+  btnDownloadText: { fontFamily: 'Poppins_600SemiBold', fontSize: 15, color: '#15476C' },
 });

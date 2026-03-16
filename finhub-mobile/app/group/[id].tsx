@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   ScrollView,
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
 export default function GroupManagementScreen() {
@@ -77,11 +77,11 @@ export default function GroupManagementScreen() {
             style={styles.menuCard}
             activeOpacity={0.8}
             onPress={() => {
-              // ─── 2. QUAN TRỌNG: TRUYỀN ID CỦA NHÓM SANG TRANG TIẾP THEO ───
               if (menu.route) {
                 router.push({
-                  pathname: menu.route as any, // Ép kiểu để expo-router không báo lỗi
-                  params: { groupId: id }      // 👈 Đây là mấu chốt! Đóng gói ID Nhóm quăng sang!
+                  pathname: menu.route as any, 
+                  // 💡 ĐÃ SỬA: Đổi groupId thành id để khớp với trang members.tsx
+                  params: { id: id }      
                 });
               }
             }}

@@ -1,22 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StatusBar, StyleSheet, Image, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING, FONT_SIZE } from '@/constants/theme';
 import { BudgetSummaryCard } from '@/components/wallet/BudgetSummaryCard';
 import { BudgetCard } from '@/components/wallet/BudgetCard';
-import { router } from 'expo-router';
-import { useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
-
+import { router, useFocusEffect } from 'expo-router';
+import { Feather, Ionicons } from '@expo/vector-icons'; 
 
 import { useAuthStore } from '@/stores/auth.store';
 import axiosClient from '@/api/axiosClient';
 
-import { Feather, Ionicons } from '@expo/vector-icons'; 
-
-
 export default function HomeScreen() {
-  const user = useAuthStore((state: { user: any; }) => state.user);
+  // Lấy thông tin user từ Zustand store
+  const user = useAuthStore((state: any) => state.user);
   
   const [walletSummary, setWalletSummary] = useState({
     unallocatedMoney: 0,
@@ -47,7 +43,6 @@ export default function HomeScreen() {
     });
   };
 
-
   const handleDeleteBudget = async (item: any) => {
     Alert.alert(
       "Xóa ngân sách",
@@ -63,12 +58,14 @@ export default function HomeScreen() {
           onPress: async () => {
             try {
               await axiosClient.delete(`/Budget/${item.budgetId}`);
+              
+              // Cập nhật lại UI ngay lập tức
               setWalletSummary((prev: any) => ({
                 ...prev,
                 mandatory: prev.mandatory.filter((b: any) => b.budgetId !== item.budgetId),
                 nonRecurring: prev.nonRecurring.filter((b: any) => b.budgetId !== item.budgetId),
               }));
-
+              Alert.alert("Thành công", "Đã xóa ngân sách!");
             } catch (error) {
               console.error("Lỗi khi xóa Budget:", error);
               Alert.alert("Lỗi", "Không thể xóa ngân sách lúc này.");
@@ -78,7 +75,13 @@ export default function HomeScreen() {
       ]
     );
   };
-  const defaultAvatar = `https://ui-avatars.com/api/?name=${user?.fullName || 'User'}&background=15476C&color=fff`;
+
+  // 💡 TỐI ƯU LOGIC HIỂN THỊ TÊN & AVATAR
+  // Ưu tiên lấy Name (hoặc Nickname/FullName tùy DB của bạn)
+  const displayName = user?.fullName || user?.nickname || user?.email?.split('@')[0] || 'Guest';
+  
+  // Tự động tạo Avatar xịn xò từ chữ cái đầu của tên
+  const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=15476C&color=fff&bold=true`;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -96,7 +99,10 @@ export default function HomeScreen() {
               source={{ uri: user?.avatarUrl || defaultAvatar }} 
               style={styles.avatar} 
             />
-            <Text style={styles.greeting}>Hi, {user?.nickname || 'Guest'}</Text>
+            {/* 💡 SỬ DỤNG BIẾN displayName ĐÃ XỬ LÝ */}
+            <Text style={styles.greeting} numberOfLines={1}>
+              Hi, {displayName}
+            </Text>
           </TouchableOpacity>
           
           <View style={styles.headerActions}>
@@ -124,18 +130,16 @@ export default function HomeScreen() {
       {/* Body Section */}
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* 2. 🆕 Render danh sách Mandatory thật từ State */}
         <Text style={styles.sectionTitle}>Mandatory fee</Text>
         {walletSummary.mandatory.map((item: any) => (
           <BudgetCard 
-            key={item.budgetId} // Dùng budgetId do Backend trả về
+            key={item.budgetId} 
             onPress={() => router.push(`/group/budget-detail/${item.budgetId}`)} 
             onDelete={handleDeleteBudget}
             item={item} 
           />
         ))}
 
-        {/* 3. 🆕 Render danh sách Non-recurring thật từ State */}
         <Text style={[styles.sectionTitle, styles.sectionTitleSpacing]}>Non-recurring fee</Text>
         {walletSummary.nonRecurring.map((item: any) => (
           <BudgetCard 
@@ -166,9 +170,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: SPACING.xxl,
   },
-  userInfo: { flexDirection: 'row', alignItems: 'center' },
+  userInfo: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 16 },
   avatar: { width: 48, height: 48, borderRadius: 24, marginRight: SPACING.md },
-  greeting: { color: COLORS.white, fontSize: FONT_SIZE.lg, fontWeight: '600' },
+  greeting: { color: COLORS.white, fontSize: FONT_SIZE.lg, fontWeight: '600', flexShrink: 1 },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   headerButton: {
     width: 40, height: 40,

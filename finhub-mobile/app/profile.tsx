@@ -12,8 +12,11 @@ import { useAuthStore } from '@/stores/auth.store';
 
 export default function ProfileSettingsScreen() {
   const router = useRouter();
+  
   const authUser = useAuthStore((state: any) => state.user);
-const updateUser = useAuthStore((state: any) => state.updateUser);
+  const updateUser = useAuthStore((state: any) => state.updateUser);
+  // 💡 Lấy hàm logout từ Zustand Store
+  const logout = useAuthStore((state: any) => state.logout);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -21,12 +24,10 @@ const updateUser = useAuthStore((state: any) => state.updateUser);
   const [nickname, setNickname] = useState('');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
 
-
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await axiosClient.get('/User/me');
-        // console.log('Profile response:', JSON.stringify(res.data, null, 2));
         const u = res.data;
         setName(u.fullName || '');
         setNickname(u.nickname || '');
@@ -51,15 +52,11 @@ const updateUser = useAuthStore((state: any) => state.updateUser);
     if (!result.canceled) setAvatarUri(result.assets[0].uri);
   };
 
-  // ✅ Save gọi API cập nhật profile
   const handleSave = async () => {
     setIsSaving(true);
     try {
       await axiosClient.put('/User/me', { fullName: name, nickname });
-
-      // Cập nhật lại store để Header hiển thị đúng tên mới
       updateUser({ fullName: name, nickname });
-
       Alert.alert('Thành công', 'Đã cập nhật thông tin!');
       router.back();
     } catch (error) {
@@ -68,6 +65,29 @@ const updateUser = useAuthStore((state: any) => state.updateUser);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // 💡 Hàm xử lý Đăng xuất
+  const handleLogout = () => {
+    Alert.alert(
+      "Đăng xuất",
+      "Bạn có chắc chắn muốn đăng xuất khỏi ứng dụng không?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Đăng xuất",
+          style: "destructive", // Nút màu đỏ
+          onPress: async () => {
+            try {
+              await logout(); // Gọi hàm xóa token trong store
+              router.replace('/(auth)/login'); // Đẩy về trang Login dựa theo cấu trúc thư mục của bạn
+            } catch (error) {
+              console.error("Lỗi khi đăng xuất:", error);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=15476C&color=fff`;
@@ -173,7 +193,12 @@ const updateUser = useAuthStore((state: any) => state.updateUser);
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.logoutButton} activeOpacity={0.8}>
+            {/* 💡 GẮN HÀM XỬ LÝ VÀO NÚT LOGOUT */}
+            <TouchableOpacity 
+              style={styles.logoutButton} 
+              activeOpacity={0.8}
+              onPress={handleLogout}
+            >
               <Text style={styles.logoutText}>Log Out</Text>
             </TouchableOpacity>
 
@@ -185,7 +210,6 @@ const updateUser = useAuthStore((state: any) => state.updateUser);
   );
 }
 
-// Giữ nguyên styles từ file gốc
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 16, backgroundColor: '#FFFFFF' },

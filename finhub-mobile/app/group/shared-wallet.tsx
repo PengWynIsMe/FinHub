@@ -9,15 +9,14 @@ const formatVND = (amount: number) => amount.toString().replace(/\B(?=(\d{3})+(?
 export default function SharedWalletScreen() {
   const router = useRouter();
   
-  // 1. Lấy ID của Group từ URL (bắt cả param 'id' hoặc 'groupId')
   const params = useLocalSearchParams();
   const groupId = (params.groupId || params.id) as string;
 
-  // 2. State chứa dữ liệu thật
   const [wallets, setWallets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedWallet, setSelectedWallet] = useState<any>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // 3. Tự động gọi API lấy Ví của Nhóm khi vào màn hình
   useFocusEffect(
     useCallback(() => {
       const fetchWallets = async () => {
@@ -25,7 +24,6 @@ export default function SharedWalletScreen() {
           setIsLoading(false);
           return;
         }
-        
         setIsLoading(true);
         try {
           const res = await axiosClient.get(`/Group/${groupId}/wallets`);
@@ -36,90 +34,104 @@ export default function SharedWalletScreen() {
           setIsLoading(false);
         }
       };
-
       fetchWallets();
     }, [groupId])
   );
 
-  const renderSharedWalletCard = (item: any) => {
-  const remaining = item.allocated - item.spent;
-  const progress = item.allocated > 0 ? Math.min((item.spent / item.allocated) * 100, 100) : 0;
+  // ✅ handleDeleteWallet nằm NGOÀI renderSharedWalletCard, ở cấp component
+  const handleDeleteWallet = async () => {
+    if (!selectedWallet) return;
+    try {
+      await axiosClient.delete(`/Wallet/${selectedWallet.id}`);
+      setWallets(prev => prev.filter(w => w.id !== selectedWallet.id));
+    } catch (error) {
+      alert("Xóa ví thất bại!");
+    } finally {
+      setShowDeleteModal(false);
+      setSelectedWallet(null);
+    }
+  };
 
-  return (
-    <TouchableOpacity 
-      key={item.id} style={styles.card} activeOpacity={0.9}
-      onPress={() => router.push(`/group/wallet-detail/${item.id}`)}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.headerLeft}>
-          <View style={[styles.iconBox, { backgroundColor: item.color + '20' }]}>
-            <Text style={styles.emoji}>{item.icon}</Text>
+  const renderSharedWalletCard = (item: any) => {
+    const remaining = item.allocated - item.spent;
+    const progress = item.allocated > 0 ? Math.min((item.spent / item.allocated) * 100, 100) : 0;
+
+    return (
+      <TouchableOpacity
+        key={item.id} style={styles.card} activeOpacity={0.9}
+        onPress={() => router.push(`/group/wallet-detail/${item.id}`)}
+      >
+        <View style={styles.cardHeader}>
+          <View style={styles.headerLeft}>
+            <View style={[styles.iconBox, { backgroundColor: item.color + '20' }]}>
+              <Text style={styles.emoji}>{item.icon}</Text>
+            </View>
+            <View>
+              <Text style={styles.cardName}>{item.name}</Text>
+              <Text style={styles.cardAllocated}>Allocated: {formatVND(item.allocated)}VNĐ</Text>
+              {item.myRole && (
+                <View style={[
+                  styles.roleBadge,
+                  item.myRole === 'Admin' ? styles.roleBadgeAdmin : styles.roleBadgeMember,
+                  { marginTop: 4, alignSelf: 'flex-start' }
+                ]}>
+                  <Text style={styles.roleText}>{item.myRole}</Text>
+                </View>
+              )}
+            </View>
           </View>
-          {/* ✅ Name + Allocated + Role badge xếp dọc cùng nhau */}
-          <View>
-            <Text style={styles.cardName}>{item.name}</Text>
-            <Text style={styles.cardAllocated}>Allocated: {formatVND(item.allocated)}VNĐ</Text>
-            {/* ✅ Role badge chuyển xuống đây, ngay dưới allocated */}
-            {item.myRole && (
-              <View style={[
-                styles.roleBadge, 
-                item.myRole === 'Admin' ? styles.roleBadgeAdmin : styles.roleBadgeMember,
-                { marginTop: 4, alignSelf: 'flex-start' } // ✅ Không chiếm full width
-              ]}>
-                <Text style={styles.roleText}>{item.myRole}</Text>
+
+          <View style={styles.avatarStack}>
+            {item.members?.slice(0, 3).map((member: any, index: number) => (
+              <View key={member.id} style={[styles.avatarWrapper, { marginLeft: index > 0 ? -10 : 0 }]}>
+                {member.avatar ? (
+                  <Image source={{ uri: member.avatar }} style={styles.avatarImg} />
+                ) : (
+                  <View style={[styles.avatarPlaceholder, { alignItems: 'center', justifyContent: 'center' }]}>
+                    <Feather name="user" size={14} color="#9CA3AF" />
+                  </View>
+                )}
               </View>
+            ))}
+
+            {item.members && item.members.length > 3 ? (
+              <View style={[styles.avatarWrapper, { marginLeft: -10, backgroundColor: '#EAF4FA', alignItems: 'center', justifyContent: 'center' }]}>
+                <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 10, color: '#15476C' }}>
+                  +{item.members.length - 3}
+                </Text>
+              </View>
+            ) : (
+              // ✅ onPress gọi đúng hàm, set đúng item
+              <TouchableOpacity style={styles.moreBtn} onPress={() => {
+                setSelectedWallet(item);
+                setShowDeleteModal(true);
+              }}>
+                <Feather name="more-horizontal" size={16} color="#1F2937" />
+              </TouchableOpacity>
             )}
           </View>
         </View>
 
-        {/* Avatar stack — chỉ còn avatars + nút more, không có role badge nữa */}
-        <View style={styles.avatarStack}>
-          {item.members?.slice(0, 3).map((member: any, index: number) => (
-            <View key={member.id} style={[styles.avatarWrapper, { marginLeft: index > 0 ? -10 : 0 }]}>
-              {member.avatar ? (
-                <Image source={{ uri: member.avatar }} style={styles.avatarImg} />
-              ) : (
-                <View style={[styles.avatarPlaceholder, { alignItems: 'center', justifyContent: 'center' }]}>
-                  <Feather name="user" size={14} color="#9CA3AF" />
-                </View>
-              )}
-            </View>
-          ))}
-
-          {item.members && item.members.length > 3 ? (
-            <View style={[styles.avatarWrapper, { marginLeft: -10, backgroundColor: '#EAF4FA', alignItems: 'center', justifyContent: 'center' }]}>
-              <Text style={{ fontFamily: 'Poppins_600SemiBold', fontSize: 10, color: '#15476C' }}>
-                +{item.members.length - 3}
-              </Text>
-            </View>
-          ) : (
-            <TouchableOpacity style={styles.moreBtn}>
-              <Feather name="more-horizontal" size={16} color="#1F2937" />
-            </TouchableOpacity>
-          )}
+        <View style={styles.statsRow}>
+          <View>
+            <Text style={styles.statLabel}>Spent</Text>
+            <Text style={styles.statValue}>{formatVND(item.spent)}VNĐ</Text>
+          </View>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={styles.statLabel}>Remaining</Text>
+            <Text style={[styles.statValue, remaining < 0 && { color: '#FF4267' }]}>
+              {formatVND(remaining)}VNĐ
+            </Text>
+          </View>
         </View>
-      </View>
-
-      {/* Stats + Progress bar giữ nguyên */}
-      <View style={styles.statsRow}>
-        <View>
-          <Text style={styles.statLabel}>Spent</Text>
-          <Text style={styles.statValue}>{formatVND(item.spent)}VNĐ</Text>
+        <View style={styles.progressContainer}>
+          <View style={[styles.progressBar, { width: `${progress}%`, backgroundColor: item.color }]} />
         </View>
-        <View style={{ alignItems: 'flex-end' }}>
-          <Text style={styles.statLabel}>Remaining</Text>
-          <Text style={[styles.statValue, remaining < 0 && { color: '#FF4267' }]}>
-            {formatVND(remaining)}VNĐ
-          </Text>
-        </View>
-      </View>
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressBar, { width: `${progress}%`, backgroundColor: item.color }]} />
-      </View>
-    </TouchableOpacity>
-  );
-};
+      </TouchableOpacity>
+    );
+  };
 
+  // ✅ return của component chính — modal nằm ở đây, KHÔNG nằm trong renderSharedWalletCard
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -128,48 +140,67 @@ export default function SharedWalletScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Shared Wallet</Text>
       </View>
-      
+
       {isLoading ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#15476C" />
+          <ActivityIndicator size="large" color="#15476C" />
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            <TouchableOpacity 
-              style={styles.btnAddWallet} 
-              activeOpacity={0.8}
-              onPress={() => {
-                  if (!groupId) {
-                    alert("Lỗi: Không tìm thấy ID nhóm. Vui lòng quay lại và thử lại!");
-                    return;
-                  }
-                  
-                  // 4. QUAN TRỌNG: Truyền groupId sang trang Create Shared Wallet
-                  router.push({
-                    pathname: '/group/create-shared',
-                    params: { type: 'wallet', action: 'create', groupId: groupId }
-                  });
-              }}
-            >
-              <Feather name="plus-circle" size={20} color="#15476C" style={{ marginRight: 8 }} />
-              <Text style={styles.btnAddWalletText}>Create New Wallet</Text>
-            </TouchableOpacity>
-            
-            {/* 5. Hiển thị UI trống nếu chưa có ví */}
-            {wallets.length === 0 ? (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 20 }}>Chưa có ví chung nào trong nhóm này.</Text>
-            ) : (
-                wallets.map(renderSharedWalletCard)
-            )}
-            
-            <View style={{ height: 40 }} />
+          <TouchableOpacity
+            style={styles.btnAddWallet}
+            activeOpacity={0.8}
+            onPress={() => {
+              if (!groupId) {
+                alert("Lỗi: Không tìm thấy ID nhóm. Vui lòng quay lại và thử lại!");
+                return;
+              }
+              router.push({
+                pathname: '/group/create-wallet',
+                params: { type: 'wallet', action: 'create', groupId: groupId }
+              });
+            }}
+          >
+            <Feather name="plus-circle" size={20} color="#15476C" style={{ marginRight: 8 }} />
+            <Text style={styles.btnAddWalletText}>Create New Wallet</Text>
+          </TouchableOpacity>
+
+          {wallets.length === 0 ? (
+            <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 20 }}>Chưa có ví chung nào trong nhóm này.</Text>
+          ) : (
+            wallets.map(renderSharedWalletCard)
+          )}
+
+          <View style={{ height: 40 }} />
         </ScrollView>
+      )}
+
+      {/* ✅ Modal nằm TRONG return của component chính, NGOÀI ScrollView */}
+      {showDeleteModal && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Xóa ví chung?</Text>
+            <Text style={styles.modalMessage}>
+              Bạn có chắc muốn xóa ví "{selectedWallet?.name}" không? Hành động này không thể hoàn tác.
+            </Text>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => { setShowDeleteModal(false); setSelectedWallet(null); }}
+              >
+                <Text style={styles.modalCancelText}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalDelete} onPress={handleDeleteWallet}>
+                <Text style={styles.modalDeleteText}>Xóa</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       )}
     </SafeAreaView>
   );
 }
 
-// ─── CSS GIỮ NGUYÊN 100% NHƯ CỦA BẠN ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E3F6FF' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 20 },
@@ -199,4 +230,13 @@ const styles = StyleSheet.create({
   roleBadgeAdmin: { backgroundColor: '#EAF4FA' },
   roleBadgeMember: { backgroundColor: '#F3F4F6' },
   roleText: { fontFamily: 'Poppins_500Medium', fontSize: 10, color: '#15476C' },
+  modalOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', zIndex: 999 },
+  modalBox: { backgroundColor: '#fff', borderRadius: 20, padding: 24, marginHorizontal: 32, width: '85%' },
+  modalTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: '#1F2937', marginBottom: 8 },
+  modalMessage: { fontFamily: 'Poppins_400Regular', fontSize: 14, color: '#6B7280', marginBottom: 20 },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  modalCancel: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3F4F6' },
+  modalCancelText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#374151' },
+  modalDelete: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, backgroundColor: '#FF4267' },
+  modalDeleteText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#fff' },
 });

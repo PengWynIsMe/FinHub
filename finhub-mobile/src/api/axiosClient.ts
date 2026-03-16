@@ -6,9 +6,9 @@ import { Platform } from 'react-native';
 // For Android Emulator: 10.0.2.2
 // For iOS Simulator: localhost or your local IP address
 // const API_URL = Platform.OS === 'android' ? 'http://10.0.2.2:5274/api' : 'http://localhost:5274/api';
-// const API_URL = 'http://192.168.1.11:5274/api';
+const API_URL = 'http://192.168.1.8:5274/api';
   // const API_URL = 'http://10.30.231.253:5274/api';
-  const API_URL = 'http://192.168.1.27:5274/api';
+  // const API_URL = 'http://192.168.1.27:5274/api';
 
 const axiosClient = axios.create({
   baseURL: API_URL,

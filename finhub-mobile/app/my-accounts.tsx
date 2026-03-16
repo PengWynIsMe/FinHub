@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from 'expo-router';
-import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import axiosClient from '@/api/axiosClient';
 
 // Map type → icon/color vì Backend không trả icon/color
@@ -24,7 +24,7 @@ export default function MyAccountsScreen() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Fetch mỗi khi màn hình được focus (quay lại từ add-account cũng refresh)
+  // ✅ Fetch mỗi khi màn hình được focus
   useFocusEffect(
     useCallback(() => {
       const fetchAccounts = async () => {
@@ -47,7 +47,7 @@ export default function MyAccountsScreen() {
   const handleSetDefault = async (walletId: string) => {
     try {
       await axiosClient.patch(`/Wallet/${walletId}/set-default`);
-      // Cập nhật UI ngay lập tức không cần gọi lại API
+      // Cập nhật UI ngay lập tức
       setAccounts(prev =>
         prev.map(acc => ({ ...acc, isDefaultAccount: acc.walletId === walletId }))
       );
@@ -55,6 +55,40 @@ export default function MyAccountsScreen() {
       console.error('Lỗi set default:', error);
       Alert.alert('Lỗi', 'Không thể cập nhật ví mặc định.');
     }
+  };
+
+  // 💡 XÓA VÍ
+  const handleDeleteWallet = (walletId: string, walletName: string, isDefault: boolean) => {
+    // Không cho phép xóa ví mặc định
+    if (isDefault) {
+      Alert.alert('Không thể xóa', 'Đây là tài khoản mặc định. Vui lòng chọn tài khoản khác làm mặc định trước khi xóa.');
+      return;
+    }
+
+    Alert.alert(
+      'Xóa tài khoản',
+      `Bạn có chắc chắn muốn xóa tài khoản "${walletName}" không?\n\nMọi giao dịch liên quan đến ví này có thể sẽ bị ảnh hưởng.`,
+      [
+        { text: 'Hủy', style: 'cancel' },
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Gọi API xóa ví
+              await axiosClient.delete(`/Wallet/${walletId}`);
+              
+              // Cập nhật UI ngay lập tức
+              setAccounts(prev => prev.filter(acc => acc.walletId !== walletId));
+              Alert.alert('Thành công', 'Đã xóa tài khoản!');
+            } catch (error: any) {
+              console.error('Lỗi khi xóa ví:', error);
+              Alert.alert('Lỗi', error.response?.data?.Message || 'Không thể xóa tài khoản lúc này.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const totalBalance = accounts.reduce((sum, acc) => sum + (acc.currentBalance || 0), 0);
@@ -74,7 +108,7 @@ export default function MyAccountsScreen() {
           <Feather name="chevron-left" size={28} color="#1F2937" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Accounts</Text>
-        <TouchableOpacity style={styles.addButton} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.addButton} activeOpacity={0.7} onPress={() => router.push('/add-account')}>
           <Feather name="plus" size={24} color="#1F2937" />
         </TouchableOpacity>
       </View>
@@ -89,14 +123,13 @@ export default function MyAccountsScreen() {
 
         <Text style={styles.sectionTitle}>Your Accounts</Text>
 
-        <TouchableOpacity style={styles.btnAddAccount} activeOpacity={0.8}>
+        <TouchableOpacity style={styles.btnAddAccount} activeOpacity={0.8} onPress={() => router.push('/add-account')}>
           <Feather name="plus-circle" size={20} color="#15476C" style={{ marginRight: 8 }} />
           <Text style={styles.btnAddAccountText}>Add New Account</Text>
         </TouchableOpacity>
 
         {/* ─── DANH SÁCH VÍ THẬT ─── */}
         {accounts.map((acc) => {
-          // Map type → style, fallback về default nếu type lạ
           const style = ACCOUNT_STYLE[acc.type] ?? ACCOUNT_STYLE.default;
 
           return (
@@ -115,23 +148,37 @@ export default function MyAccountsScreen() {
                   <Text style={styles.accType}>{acc.type}</Text>
                 </View>
 
-                {/* ✅ Set Default gọi API thật */}
-                <TouchableOpacity
-                  style={styles.defaultToggle}
-                  onPress={() => handleSetDefault(acc.walletId)}
-                  activeOpacity={0.7}
-                >
-                  {acc.isDefaultAccount ? (
-                    <View style={styles.defaultBadge}>
-                      <Feather name="check-circle" size={14} color="#10B981" />
-                      <Text style={styles.defaultBadgeText}>Default</Text>
-                    </View>
-                  ) : (
-                    <View style={styles.setDefaultBtn}>
-                      <Text style={styles.setDefaultText}>Set Default</Text>
-                    </View>
-                  )}
-                </TouchableOpacity>
+                {/* 💡 Chứa cả Nút Set Default và Nút 3 chấm */}
+                <View style={styles.rightActions}>
+                  <TouchableOpacity
+                    style={styles.defaultToggle}
+                    onPress={() => handleSetDefault(acc.walletId)}
+                    activeOpacity={0.7}
+                  >
+                    {acc.isDefaultAccount ? (
+                      <View style={styles.defaultBadge}>
+                        <Feather name="check-circle" size={14} color="#10B981" />
+                        <Text style={styles.defaultBadgeText}>Default</Text>
+                      </View>
+                    ) : (
+                      <View style={styles.setDefaultBtn}>
+                        <Text style={styles.setDefaultText}>Set Default</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+
+                  {/* 💡 NÚT 3 CHẤM */}
+                  <TouchableOpacity 
+                    style={styles.moreButton}
+                    onPress={(e) => {
+                      e.stopPropagation(); // Ngăn bấm nhầm vào cả card
+                      handleDeleteWallet(acc.walletId, acc.name, acc.isDefaultAccount);
+                    }}
+                  >
+                    <Feather name="more-horizontal" size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                </View>
+
               </View>
 
               <View style={styles.divider} />
@@ -150,7 +197,6 @@ export default function MyAccountsScreen() {
   );
 }
 
-// Giữ nguyên styles từ file gốc
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E3F6FF' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 20 },
@@ -170,7 +216,12 @@ const styles = StyleSheet.create({
   accInfo: { flex: 1 },
   accName: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#1F2937' },
   accType: { fontFamily: 'Poppins_400Regular', fontSize: 13, color: '#6B7280' },
-  defaultToggle: { marginLeft: 8 },
+  
+  // 💡 Bọc cả nút Set Default và 3 chấm
+  rightActions: { flexDirection: 'row', alignItems: 'center' },
+  defaultToggle: { },
+  moreButton: { padding: 8, marginLeft: 4 }, // Căn lề cho nút 3 chấm
+  
   defaultBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#D1FAE5', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
   defaultBadgeText: { fontFamily: 'Poppins_600SemiBold', fontSize: 12, color: '#10B981', marginLeft: 4 },
   setDefaultBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12, backgroundColor: '#F3F4F6' },
