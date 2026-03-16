@@ -11,6 +11,7 @@ namespace Finhub.API.DTOs.Requests
     public class CreateSharedWalletRequest
     {
         public string Name { get; set; } = null!;
+        public decimal AllocatedAmount { get; set; }
         public string? Icon { get; set; }
         public string? Color { get; set; }
     }

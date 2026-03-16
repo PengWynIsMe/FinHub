@@ -31,6 +31,8 @@ public partial class FinhubDbContext : DbContext
 
     public virtual DbSet<GroupMember> GroupMembers { get; set; }
 
+    public virtual DbSet<PaymentRequest> PaymentRequests { get; set; }
+
 
     public virtual DbSet<Notification> Notifications { get; set; }
 

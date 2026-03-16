@@ -72,14 +72,39 @@ export default function ScanScreen() {
     ).start();
   }, [scanLinePosition]);
 
-  // 💡 Xử lý khi Quét được mã (QR của người khác)
-  // 💡 Xử lý khi Quét được mã
+  // 💡 HÀM GIẢI MÃ VIETQR (CHUẨN EMVCo) ĐỂ LẤY SỐ TIỀN VÀ TÊN QUÁN
+  const parseVietQR = (payload: string) => {
+    let amount = 0;
+    let merchantName = "Cửa hàng (VietQR)";
+
+    try {
+      let i = 0;
+      while (i < payload.length) {
+        const tag = payload.substring(i, i + 2);
+        const len = parseInt(payload.substring(i + 2, i + 4), 10);
+        const value = payload.substring(i + 4, i + 4 + len);
+
+        if (tag === '54') { // Tag 54 trong EMVCo luôn là Số tiền (Transaction Amount)
+          amount = parseFloat(value);
+        } else if (tag === '59') { // Tag 59 thường là Tên người nhận (Merchant Name)
+          merchantName = value;
+        }
+
+        i += 4 + len;
+      }
+    } catch (error) {
+      console.log("Không thể parse EMVCo:", error);
+    }
+    return { amount, merchantName };
+  };
+  // 💡 HÀM TỔNG HỢP: XỬ LÝ TẤT CẢ CÁC LOẠI MÃ QR KHI QUÉT ĐƯỢC
   const handleBarCodeScanned = ({ type, data }: { type: string; data: string }) => {
     setScanned(true); 
     
     try {
       const parsedData = JSON.parse(data);
       
+      // 1. LUỒNG CHUYỂN TIỀN CÁ NHÂN
       if (parsedData.action === 'transfer') {
         Alert.alert(
           "Nhận diện tài khoản!", 
@@ -93,7 +118,7 @@ export default function ScanScreen() {
           ]
         );
       } 
-      // 💡 NHÁNH MỚI: XỬ LÝ QUÉT MÃ MỜI VÀO NHÓM
+      // 2. LUỒNG THAM GIA NHÓM (QUÉT MÃ MỜI)
       else if (parsedData.action === 'join_group') {
         Alert.alert(
           "Lời mời vào nhóm", 
@@ -102,16 +127,12 @@ export default function ScanScreen() {
             { text: "Hủy", onPress: () => setScanned(false), style: 'cancel' },
             { text: "Tham gia ngay", onPress: async () => {
                 try {
-                  // Gọi API tham gia nhóm với inviteCode
                   await axiosClient.post('/Group/join', { inviteCode: parsedData.inviteCode });
                   Alert.alert("Thành công 🎉", "Bạn đã tham gia nhóm thành công!", [
-                    { text: "Xem nhóm", onPress: () => {
-                        // Trở về trang quản lý hoặc bay thẳng vào nhóm đó
-                        router.back(); 
-                    }}
+                    { text: "Xem nhóm", onPress: () => router.back() }
                   ]);
                 } catch (error: any) {
-                  Alert.alert("Lỗi", error.response?.data?.Message || "Không thể tham gia nhóm lúc này.", [
+                  Alert.alert("Lỗi", error.response?.data?.Message || "Không thể tham gia.", [
                     { text: "Đóng", onPress: () => setScanned(false) }
                   ]);
                 }
@@ -119,11 +140,43 @@ export default function ScanScreen() {
           ]
         );
       } 
+      // 3. LUỒNG THANH TOÁN (MOCK DATA TỪ WEB JSON)
+      else if (parsedData.action === 'payment') {
+        router.push({
+          pathname: '/qr-payment',
+          params: {
+            merchantName: parsedData.merchantName,
+            amount: parsedData.amount,
+            qrPayload: data // Truyền cục data sang
+          }
+        });
+      }
       else {
+        // Mã JSON lạ
         Alert.alert("Quét thành công", data, [{ text: "OK", onPress: () => setScanned(false) }]);
       }
     } catch (e) {
-      Alert.alert("Nội dung mã:", data, [{ text: "OK", onPress: () => setScanned(false) }]);
+      // 4. LUỒNG QUÉT MÃ VIETQR THẬT (ĐỌC SỐ TIỀN THỰC TẾ TỪ MÃ)
+      const vietQrData = parseVietQR(data);
+
+      Alert.alert(
+        "Nhận diện VietQR", 
+        `Thanh toán cho: ${vietQrData.merchantName}\nSố tiền: ${vietQrData.amount.toLocaleString('vi-VN')}đ\n\nBạn có muốn tiếp tục?`,
+        [
+          { text: "Hủy", onPress: () => setScanned(false), style: 'cancel' },
+          { text: "Tiếp tục", onPress: () => {
+              // Bay sang trang qr-payment với DỮ LIỆU THẬT bóc từ mã QR
+              router.push({
+                pathname: '/qr-payment',
+                params: {
+                  merchantName: vietQrData.merchantName,
+                  amount: vietQrData.amount, // 👈 SỐ TIỀN THẬT ĐÂY RỒI!
+                  qrPayload: data
+                }
+              });
+          }}
+        ]
+      );
     }
   };
 

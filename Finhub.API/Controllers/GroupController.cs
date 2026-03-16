@@ -91,44 +91,39 @@ namespace Finhub.API.Controllers
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
-            // 1. Lấy Group kèm theo Members và Wallets
-            // 💡 QUAN TRỌNG: Kéo thêm `Transactions` của Ví để tính toán
             var group = await _context.Groups
                 .Include(g => g.GroupMembers).ThenInclude(gm => gm.User)
                 .Include(g => g.Owner)
                 .Include(g => g.Wallets)
-                    .ThenInclude(w => w.Transactions) // 👈 Kéo các giao dịch trực tiếp của ví nhóm
+                    .ThenInclude(w => w.Transactions)
+                .Include(g => g.Wallets)
+                    .ThenInclude(w => w.Budgets) // 💡 QUAN TRỌNG: Kéo thêm Budgets để lấy hạn mức
                 .FirstOrDefaultAsync(g => g.GroupId == groupId);
 
             if (group == null) return NotFound(new { Message = "Không tìm thấy nhóm!" });
 
-            // 2. Xác định Role của User hiện tại trong nhóm
             var myRole = group.OwnerId == userId ? "Admin" :
                          group.GroupMembers.FirstOrDefault(gm => gm.UserId == userId)?.Role ?? "Member";
 
-            // 3. Gom danh sách Avatar thành viên nhóm
-            var membersList = new List<object>
-            {
-                new { id = group.OwnerId.ToString(), avatar = group.Owner?.AvatarUrl }
-            };
+            var membersList = new List<object> { new { id = group.OwnerId.ToString(), avatar = group.Owner?.AvatarUrl } };
             foreach (var gm in group.GroupMembers)
             {
                 if (gm.UserId != group.OwnerId)
                     membersList.Add(new { id = gm.UserId.ToString(), avatar = gm.User?.AvatarUrl });
             }
 
-            // 4. Map dữ liệu
             var walletsToProcess = group.Wallets ?? new List<Wallet>();
             var result = walletsToProcess.Where(w => !w.IsArchived).Select(w =>
             {
                 var txs = w.Transactions ?? new List<Transaction>();
 
-                // ✅ Dùng CurrentBalance làm Allocated — luôn đúng với cả ví tạo thủ công lẫn ví từ Goal
-                // Ví tạo thủ công: không có Income tx → dùng CurrentBalance
-                // Ví từ Goal: CurrentBalance = goal.CurrentAmount (set lúc EndGoal)
-                var allocated = w.CurrentBalance;
+                // 💡 LOGIC CHUẨN XÁC ĐỂ KHÔNG PHÁ VỠ TÍNH NĂNG END GOAL:
+                // Nếu ví có Budget -> Allocated là tổng Budget (Ví tạo bằng tay)
+                // Nếu ví KHÔNG có Budget -> Allocated là CurrentBalance (Ví chuyển từ Goal sang)
+                var allocated = (w.Budgets != null && w.Budgets.Any())
+                                ? w.Budgets.Sum(b => b.AmountLimit)
+                                : w.CurrentBalance;
 
-                // ✅ Spent = tổng Expense đã Completed
                 var spent = txs.Where(t => t.Type != null
                                         && t.Type.Equals("Expense", StringComparison.OrdinalIgnoreCase)
                                         && t.Status == "Completed").Sum(t => t.Amount);
@@ -141,6 +136,7 @@ namespace Finhub.API.Controllers
                     color = group.ThemeColor ?? "#15476C",
                     allocated = allocated,
                     spent = spent,
+                    currentBalance = w.CurrentBalance, // 💡 Trả về thêm Balance thực tế để mobile check
                     members = membersList,
                     myRole = myRole
                 };
@@ -196,38 +192,49 @@ namespace Finhub.API.Controllers
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // 1. Kiểm tra quyền
-                var isMember = await _context.GroupMembers
-                    .AnyAsync(gm => gm.GroupId == groupId && gm.UserId == userId);
-
-                var isOwner = await _context.Groups
-                    .AnyAsync(g => g.GroupId == groupId && g.OwnerId == userId);
+                var isMember = await _context.GroupMembers.AnyAsync(gm => gm.GroupId == groupId && gm.UserId == userId);
+                var isOwner = await _context.Groups.AnyAsync(g => g.GroupId == groupId && g.OwnerId == userId);
 
                 if (!isMember && !isOwner)
-                {
                     return StatusCode(403, new { Message = "Bạn không có quyền tạo ví trong nhóm này." });
-                }
 
-                // 2. Khởi tạo Ví chung
+                // 1. Tạo Ví (Tiền thực tế = 0)
                 var newWallet = new Wallet
                 {
                     WalletId = Guid.NewGuid(),
                     OwnerUserId = userId,
                     GroupId = groupId,
                     Name = request.Name,
-                    CurrentBalance = 0,
+                    CurrentBalance = 0, // 👈 Luôn bằng 0 vì mẹ chưa đưa tiền thật
                     IsArchived = false,
                     CreatedAt = DateTime.UtcNow,
-
-                    // 💡 THÊM 2 DÒNG NÀY ĐỂ ĐỀ PHÒNG DB BẮT BUỘC (Required):
                     Currency = "VND",
                     Type = "Shared"
                 };
-
                 _context.Wallets.Add(newWallet);
+
+                // 2. 💡 Tạo Budget đi kèm Ví để gán Hạn mức cấp phép (Allocated)
+                if (request.AllocatedAmount > 0)
+                {
+                    var newBudget = new Budget
+                    {
+                        BudgetId = Guid.NewGuid(),
+                        WalletId = newWallet.WalletId,
+                        Name = $"Hạn mức: {request.Name}",
+                        AmountLimit = request.AllocatedAmount,
+                        BudgetType = "Monthly",
+                        StartDate = DateTime.UtcNow,
+                        EndDate = DateTime.UtcNow.AddMonths(1), // Mặc định chu kỳ 1 tháng
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Budgets.Add(newBudget);
+                }
+
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 return Ok(new
                 {
@@ -237,11 +244,8 @@ namespace Finhub.API.Controllers
             }
             catch (Exception ex)
             {
-                // 💡 ĐOẠN NÀY LÀ "MÁY X-QUANG" ĐỂ SOI LỖI DB:
+                await transaction.RollbackAsync();
                 var errorDetail = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                Console.WriteLine("=== LỖI TẠO VÍ CHUNG ===: " + errorDetail);
-
-                // Trả thẳng lỗi chi tiết về cho Mobile để ta biết thiếu cột gì
                 return StatusCode(500, new { Message = "Lỗi lưu Database", Error = errorDetail });
             }
         }

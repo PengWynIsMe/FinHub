@@ -1,229 +1,251 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, SafeAreaView, TouchableOpacity,
-  ScrollView, Platform, Image, StatusBar, ActivityIndicator, Alert
+  ScrollView, Platform, Image, StatusBar, ActivityIndicator, Alert, Modal
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import axiosClient from '@/api/axiosClient';
+import QRCode from 'react-native-qrcode-svg';
+import * as Clipboard from 'expo-clipboard';
 
-// MOCK DATA MỚI CHO TAB TOTAL FUNDS (Tạm giữ nguyên vì chúng ta đang focus vào Expense Request)
-const MOCK_FUND_ALERTS = [
-  {
-    id: 'alert1',
-    walletName: 'Daily Wallet',
-    alertMessage: 'Today is exceed the limit',
-    amount: -80000,
-    sourceWallet: 'Pocket Money',
-    lastTransactionBy: 'Anh Minh',
-  }
-];
-
-const formatVND = (amount: number) => {
-  return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".") + ' VNĐ';
-};
+const formatVND = (amount: number) => amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
 export default function GroupNotificationsScreen() {
   const router = useRouter();
   const { name } = useLocalSearchParams<{ name: string }>();
-  const [activeTab, setActiveTab] = useState<'request' | 'funds'>('request');
+  
+  // 💡 CÓ 3 TABS BÂY GIỜ
+  const [activeTab, setActiveTab] = useState<'request' | 'qr_payments' | 'funds'>('request');
 
-  // ─── 💡 STATE CHO DỮ LIỆU THẬT ───
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<any[]>([]); // Data của Expense (Ảo)
+  const [qrRequests, setQrRequests] = useState<any[]>([]); // Data của QR Payment (Thật)
+  
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. GỌI API LẤY DANH SÁCH REQUEST
+  // Modal hiển thị QR cho Phụ huynh quét
+  const [selectedQrRequest, setSelectedQrRequest] = useState<any>(null);
+
   useFocusEffect(
     useCallback(() => {
-      const fetchRequests = async () => {
-        setIsLoading(true);
-        try {
-          const res = await axiosClient.get('/Notification/requests');
-          setRequests(res.data);
-        } catch (error) {
-          console.error('Lỗi lấy danh sách yêu cầu:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchRequests();
-    }, [])
+      fetchData();
+    }, [activeTab])
   );
 
-  // 2. HÀM XỬ LÝ ACCEPT (DUYỆT CHI TIÊU)
-  const handleAccept = async (notificationId: string) => {
+  const fetchData = async () => {
+    setIsLoading(true);
     try {
-      await axiosClient.put(`/Notification/${notificationId}/accept`);
-      Alert.alert('Thành công', 'Đã duyệt giao dịch. Tiền trong ví đã được trừ!');
-      // Xóa item khỏi danh sách trên UI ngay lập tức
-      setRequests(prev => prev.filter(req => req.id !== notificationId));
-    } catch (error: any) {
-      console.error('Lỗi duyệt:', error);
-      Alert.alert('Lỗi', error.response?.data?.Message || 'Không thể duyệt giao dịch lúc này.');
+      if (activeTab === 'request') {
+        const res = await axiosClient.get('/Notification/requests');
+        setRequests(res.data);
+      } else if (activeTab === 'qr_payments') {
+        const res = await axiosClient.get('/PaymentRequest/pending');
+        setQrRequests(res.data);
+      }
+    } catch (error) {
+      console.error('Lỗi lấy dữ liệu:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // 3. HÀM XỬ LÝ REJECT (TỪ CHỐI CHI TIÊU)
-  const handleReject = (notificationId: string) => {
-    Alert.alert(
-      'Từ chối',
-      'Bạn có chắc chắn muốn từ chối yêu cầu chi tiêu này?',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        { 
-          text: 'Từ chối', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await axiosClient.delete(`/Notification/${notificationId}/reject`);
-              // Xóa item khỏi danh sách trên UI
-              setRequests(prev => prev.filter(req => req.id !== notificationId));
-            } catch (error: any) {
-              console.error('Lỗi từ chối:', error);
-              Alert.alert('Lỗi', error.response?.data?.Message || 'Không thể từ chối lúc này.');
-            }
-          }
-        }
-      ]
-    );
+  // ─── LOGIC CHO TAB EXPENSE REQUEST CŨ (GIỮ NGUYÊN) ───
+  const handleAcceptExpense = async (id: string) => {
+    try {
+      await axiosClient.put(`/Notification/${id}/accept`);
+      Alert.alert('Thành công', 'Đã duyệt chi tiêu ảo!');
+      setRequests(prev => prev.filter(req => req.id !== id));
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.response?.data?.Message);
+    }
+  };
+
+  const handleRejectExpense = async (id: string) => {
+    try {
+      await axiosClient.delete(`/Notification/${id}/reject`);
+      setRequests(prev => prev.filter(req => req.id !== id));
+    } catch (error) {}
+  };
+
+  // ─── 💡 LOGIC CHO TAB QR PAYMENTS MỚI ───
+  const handleApproveQrPayment = async (id: string) => {
+    try {
+      await axiosClient.put(`/PaymentRequest/${id}/approve`);
+      Alert.alert('Hoàn tất 🎉', 'Đã ghi nhận thanh toán thành công vào hệ thống quỹ nhóm!');
+      setQrRequests(prev => prev.filter(req => req.id !== id));
+      setSelectedQrRequest(null); // Đóng modal
+    } catch (error: any) {
+      Alert.alert('Lỗi', error.response?.data?.Message || 'Không thể duyệt lúc này.');
+    }
+  };
+
+  const handleRejectQrPayment = async (id: string) => {
+    try {
+      await axiosClient.delete(`/PaymentRequest/${id}/reject`);
+      Alert.alert('Đã từ chối', 'Đã từ chối yêu cầu thanh toán của thành viên.');
+      setQrRequests(prev => prev.filter(req => req.id !== id));
+    } catch (error) {}
   };
 
   return (
     <View style={styles.mainContainer}>
       <StatusBar barStyle="light-content" backgroundColor="#15476C" />
       
-      {/* ─── DARK HEADER & TABS ─── */}
       <SafeAreaView style={styles.darkHeaderSection}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Feather name="chevron-left" size={28} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{name || 'My Family <3'}</Text>
+          <Text style={styles.headerTitle}>{name || 'My Family'}</Text>
         </View>
 
         <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'request' && styles.activeTabButton]}
-            onPress={() => setActiveTab('request')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.tabText, activeTab === 'request' && styles.activeTabText]}>
-              Expense Request
-            </Text>
+          {/* Tab 1: Chi tiêu ảo */}
+          <TouchableOpacity style={[styles.tabButton, activeTab === 'request' && styles.activeTabButton]} onPress={() => setActiveTab('request')}>
+            <Text style={[styles.tabText, activeTab === 'request' && styles.activeTabText]}>Expenses</Text>
+          </TouchableOpacity>
+          
+          {/* Tab 2: Thanh toán QR thật */}
+          <TouchableOpacity style={[styles.tabButton, activeTab === 'qr_payments' && styles.activeTabButton]} onPress={() => setActiveTab('qr_payments')}>
+            <Text style={[styles.tabText, activeTab === 'qr_payments' && styles.activeTabText]}>QR Pay</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={[styles.tabButton, activeTab === 'funds' && styles.activeTabButton]}
-            onPress={() => setActiveTab('funds')}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.tabText, activeTab === 'funds' && styles.activeTabText]}>
-              Total Funds
-            </Text>
+          {/* Tab 3: Cảnh báo */}
+          <TouchableOpacity style={[styles.tabButton, activeTab === 'funds' && styles.activeTabButton]} onPress={() => setActiveTab('funds')}>
+            <Text style={[styles.tabText, activeTab === 'funds' && styles.activeTabText]}>Alerts</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
 
-      {/* ─── LIGHT BLUE CONTENT AREA ─── */}
       <View style={styles.contentSection}>
         {isLoading ? (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <ActivityIndicator size="large" color="#15476C" />
-          </View>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}><ActivityIndicator size="large" color="#15476C" /></View>
         ) : (
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <ScrollView contentContainerStyle={styles.scrollContent}>
             
-            {activeTab === 'request' ? (
-              /* ─── TAB 1: EXPENSE REQUEST (RENDER TỪ DỮ LIỆU THẬT) ─── */
-              requests.length === 0 ? (
-                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>
-                  Không có yêu cầu chi tiêu nào đang chờ duyệt.
-                </Text>
+            {/* ─── TAB 1: EXPENSE REQUEST (CŨ) ─── */}
+            {activeTab === 'request' && (
+              requests.map((req) => (
+                <View key={req.id} style={styles.card}>
+                  <TouchableOpacity style={styles.closeButton} onPress={() => handleRejectExpense(req.id)}>
+                    <Feather name="x" size={12} color="#FFFFFF" />
+                  </TouchableOpacity>
+                  <View style={styles.cardRowTop}>
+                    <View style={styles.userInfo}>
+                      <Image source={{ uri: req.userAvatar }} style={styles.userAvatar} />
+                      <Text style={styles.userName}>{req.userName}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.btnAccept} onPress={() => handleAcceptExpense(req.id)}>
+                      <Text style={styles.btnAcceptText}>Duyệt</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.cardRowBottom}>
+                    <View style={styles.detailLeft}>
+                      <Text style={styles.reqTitle}>{req.title}</Text>
+                      <Text style={styles.reqSubtitle}>{req.category}</Text>
+                    </View>
+                    <View style={styles.detailRight}>
+                      <Text style={styles.reqAmount}>{formatVND(req.amount)}đ</Text>
+                      <Text style={styles.walletNameText}>{req.walletName}</Text>
+                    </View>
+                  </View>
+                </View>
+              ))
+            )}
+
+            {/* ─── 💡 TAB 2: QR PAYMENTS (MỚI) ─── */}
+            {activeTab === 'qr_payments' && (
+              qrRequests.length === 0 ? (
+                <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>Không có yêu cầu thanh toán nào.</Text>
               ) : (
-                requests.map((req) => (
+                qrRequests.map((req) => (
                   <View key={req.id} style={styles.card}>
-                    {/* Nút Reject (Dấu X) */}
-                    <TouchableOpacity 
-                      style={styles.closeButton} 
-                      activeOpacity={0.6}
-                      onPress={() => handleReject(req.id)}
-                    >
+                    <TouchableOpacity style={styles.closeButton} onPress={() => handleRejectQrPayment(req.id)}>
                       <Feather name="x" size={12} color="#FFFFFF" />
                     </TouchableOpacity>
-
+                    
                     <View style={styles.cardRowTop}>
                       <View style={styles.userInfo}>
-                        <Image source={{ uri: req.userAvatar }} style={styles.userAvatar} />
-                        <Text style={styles.userName}>{req.userName}</Text>
+                        <Image source={{ uri: req.requesterAvatar }} style={styles.userAvatar} />
+                        <View>
+                          <Text style={styles.userName}>{req.requesterName}</Text>
+                          <Text style={{fontSize: 12, color: '#6B7280'}}>{req.date}</Text>
+                        </View>
                       </View>
-                      {/* Nút Accept */}
-                      <TouchableOpacity 
-                        style={styles.btnAccept} 
-                        activeOpacity={0.8}
-                        onPress={() => handleAccept(req.id)}
-                      >
-                        <Text style={styles.btnAcceptText}>Accept</Text>
-                      </TouchableOpacity>
                     </View>
 
-                    <View style={styles.cardRowBottom}>
-                      <View style={styles.detailLeft}>
-                        <Text style={styles.reqTitle}>{req.title}</Text>
-                        <Text style={styles.reqSubtitle}>{req.category}</Text>
-                        <Text style={styles.reqDate}>{req.date}</Text>
-                      </View>
+                    <View style={{backgroundColor: '#F9FAFB', padding: 12, borderRadius: 12, marginBottom: 16}}>
+                      <Text style={{fontFamily: 'Poppins_400Regular', fontSize: 13, color: '#4B5563', fontStyle: 'italic'}}>"{req.note}"</Text>
+                    </View>
 
-                      <View style={styles.detailRight}>
-                        <Text style={styles.reqAmount}>{formatVND(req.amount)}</Text>
-                        <View style={styles.walletInfo}>
-                          <Text style={styles.coinEmoji}>🪙</Text>
-                          <Text style={styles.walletNameText}>{req.walletName}</Text>
-                        </View>
-                        <TouchableOpacity style={styles.editButton}>
-                          <Feather name="edit-2" size={14} color="#9CA3AF" />
-                        </TouchableOpacity>
+                    <View style={[styles.cardRowBottom, {alignItems: 'center'}]}>
+                      <View style={styles.detailLeft}>
+                        <Text style={styles.reqTitle}>Thanh toán hóa đơn</Text>
+                        <Text style={[styles.reqAmount, {color: '#F59E0B', fontSize: 20}]}>{formatVND(req.amount)}đ</Text>
                       </View>
+                      <TouchableOpacity 
+                        style={[styles.btnAccept, {backgroundColor: '#10B981', flexDirection: 'row', alignItems: 'center'}]} 
+                        onPress={() => setSelectedQrRequest(req)}
+                      >
+                        <Ionicons name="qr-code" size={16} color="#FFF" style={{marginRight: 6}} />
+                        <Text style={styles.btnAcceptText}>Thanh toán</Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 ))
               )
-            ) : (
-              /* ─── TAB 2: TOTAL FUNDS (ALERTS) ─── */
-              MOCK_FUND_ALERTS.map((alert) => (
-                <View key={alert.id} style={styles.card}>
-                  <TouchableOpacity style={styles.closeButton} activeOpacity={0.6}>
-                    <Feather name="x" size={12} color="#FFFFFF" />
-                  </TouchableOpacity>
-
-                  <View style={styles.alertRow}>
-                    <Text style={styles.alertWalletName}>{alert.walletName}</Text>
-                    <Text style={styles.reqAmount}>{formatVND(alert.amount)}</Text>
-                  </View>
-
-                  <View style={[styles.alertRow, { marginBottom: 16 }]}>
-                    <Text style={styles.alertMessage}>{alert.alertMessage}</Text>
-                    <View style={styles.walletInfo}>
-                      <Text style={styles.coinEmoji}>🪙</Text>
-                      <Text style={styles.walletNameText}>{alert.sourceWallet}</Text>
-                    </View>
-                  </View>
-
-                  <Text style={styles.alertFooter}>
-                    Last transaction created by <Text style={styles.alertFooterBold}>{alert.lastTransactionBy}</Text>
-                  </Text>
-                </View>
-              ))
             )}
 
             <View style={{ height: 40 }} />
           </ScrollView>
         )}
       </View>
+
+      {/* ─── MODAL: HIỂN THỊ MÃ QR ĐỂ BỐ MẸ QUÉT THANH TOÁN THẬT ─── */}
+      <Modal visible={!!selectedQrRequest} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 16}}>
+              <Text style={{fontFamily: 'Poppins_600SemiBold', fontSize: 18}}>Hóa đơn cửa hàng</Text>
+              <TouchableOpacity onPress={() => setSelectedQrRequest(null)}>
+                <Feather name="x" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={{color: '#6B7280', textAlign: 'center', marginBottom: 20}}>
+              Hãy dùng App Ngân hàng hoặc MoMo của bạn để quét mã QR dưới đây và thanh toán cho cửa hàng.
+            </Text>
+
+            <View style={{padding: 16, backgroundColor: '#FFF', borderRadius: 20, elevation: 5, shadowColor: '#000', shadowOpacity: 0.1, marginBottom: 20}}>
+              {/* Giả lập vẽ lại mã VietQR của cửa hàng từ MerchantInfo */}
+              <QRCode
+                value={selectedQrRequest?.merchantInfo || 'Lỗi mã QR'}
+                size={200}
+                color="#1F2937"
+              />
+            </View>
+
+            <Text style={{fontFamily: 'Poppins_600SemiBold', fontSize: 28, color: '#1F2937', marginBottom: 20}}>
+              {selectedQrRequest ? formatVND(selectedQrRequest.amount) : '0'} VNĐ
+            </Text>
+
+            <TouchableOpacity 
+              style={{backgroundColor: '#15476C', paddingVertical: 14, width: '100%', borderRadius: 16, alignItems: 'center'}}
+              onPress={() => handleApproveQrPayment(selectedQrRequest.id)}
+            >
+              <Text style={{color: '#FFF', fontFamily: 'Poppins_600SemiBold', fontSize: 16}}>
+                Tôi đã chuyển tiền xong
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
 
-// ─── STYLES GIỮ NGUYÊN 100% TỪ BẢN GỐC CỦA BẠN ───
 const styles = StyleSheet.create({
   mainContainer: { flex: 1, backgroundColor: '#15476C' },
   darkHeaderSection: { backgroundColor: '#15476C', paddingTop: Platform.OS === 'android' ? 30 : 0 },
@@ -233,10 +255,11 @@ const styles = StyleSheet.create({
   tabContainer: { flexDirection: 'row', paddingHorizontal: 20, marginTop: 10 },
   tabButton: { flex: 1, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 3, borderBottomColor: 'transparent' },
   activeTabButton: { borderBottomColor: '#FFFFFF' },
-  tabText: { fontFamily: 'Poppins_500Medium', fontSize: 16, color: 'rgba(255, 255, 255, 0.6)' },
+  tabText: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: 'rgba(255, 255, 255, 0.6)' },
   activeTabText: { fontFamily: 'Poppins_600SemiBold', color: '#FFFFFF' },
   contentSection: { flex: 1, backgroundColor: '#E3F6FF', borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
   scrollContent: { paddingHorizontal: 20, paddingTop: 24 },
+  
   card: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20, marginBottom: 20, position: 'relative', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
   closeButton: { position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: 12, backgroundColor: '#9CA3AF', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#E3F6FF', zIndex: 10 },
   cardRowTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -249,16 +272,10 @@ const styles = StyleSheet.create({
   detailLeft: { flex: 1 },
   reqTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#1F2937', marginBottom: 4 },
   reqSubtitle: { fontFamily: 'Poppins_400Regular', fontSize: 12, color: '#6B7280', marginBottom: 4 },
-  reqDate: { fontFamily: 'Poppins_400Regular', fontSize: 12, color: '#9CA3AF' },
   detailRight: { alignItems: 'flex-end' },
   reqAmount: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#FF4267', marginBottom: 4 },
-  walletInfo: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  coinEmoji: { fontSize: 12, marginRight: 4 },
   walletNameText: { fontFamily: 'Poppins_400Regular', fontSize: 12, color: '#6B7280' },
-  editButton: { padding: 4 },
-  alertRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  alertWalletName: { fontFamily: 'Poppins_600SemiBold', fontSize: 16, color: '#1F2937' },
-  alertMessage: { fontFamily: 'Poppins_400Regular', fontSize: 12, color: '#9CA3AF' },
-  alertFooter: { fontFamily: 'Poppins_400Regular', fontSize: 11, color: '#6B7280' },
-  alertFooterBold: { fontFamily: 'Poppins_600SemiBold', color: '#1F2937' },
+
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { width: '100%', backgroundColor: '#FFF', borderRadius: 24, padding: 24, alignItems: 'center' },
 });
