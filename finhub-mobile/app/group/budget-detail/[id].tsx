@@ -16,8 +16,7 @@ export default function BudgetDetailScreen() {
 
   const [budgetDetail, setBudgetDetail] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // 1. GỌI API LẤY CHI TIẾT BUDGET
+ // fetch budget
   useEffect(() => {
     const fetchBudgetDetail = async () => {
       try {
@@ -75,7 +74,7 @@ export default function BudgetDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* ─── 1. OVERVIEW CARD ─── */}
+        {/* ─── OVERVIEW CARD ─── */}
         <View style={styles.overviewCard}>
           <View style={styles.cardHeader}>
             <View style={[styles.iconBox, { backgroundColor: themeColor + '20' }]}>
@@ -111,13 +110,13 @@ export default function BudgetDetailScreen() {
           </View>
         </View>
 
-        {/* ─── 2. ACTION BUTTON (Add Expense) ─── */}
+        {/* ─── ACTION ─── */}
         <TouchableOpacity style={styles.btnAddExpense} activeOpacity={0.8}>
           <Feather name="plus" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
           <Text style={styles.btnAddExpenseText}>Add Expense</Text>
         </TouchableOpacity>
 
-        {/* ─── 3. RECENT TRANSACTIONS ─── */}
+        {/* ─── RECENT TRANSACTIONS ─── */}
         <View style={styles.transactionSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Expenses</Text>
@@ -132,7 +131,6 @@ export default function BudgetDetailScreen() {
             TRANSACTIONS.map((tx) => (
               <View key={tx.id} style={styles.transactionCard}>
                 <View style={styles.txIconContainer}>
-                   {/* Dùng icon túi xách thay cho Avatar user vì đây là quỹ cá nhân */}
                    <Feather name="shopping-bag" size={20} color="#9CA3AF" />
                 </View>
                 <View style={styles.txInfo}>
@@ -152,7 +150,6 @@ export default function BudgetDetailScreen() {
   );
 }
 
-// ─── STYLES ĐẦY ĐỦ ────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E3F6FF' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 20 },

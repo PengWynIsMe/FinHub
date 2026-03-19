@@ -57,7 +57,7 @@ namespace Finhub.API.Controllers
                         return w.CurrentBalance - spent;
                     });
 
-                // 3. Gom danh sách Avatar (Chủ nhóm + Các thành viên)
+                // 3. Danh sách Avatar
                 var membersList = new List<dynamic>
                 {
                     new { id = g.OwnerId.ToString(), avatar = g.Owner?.AvatarUrl }
@@ -97,7 +97,7 @@ namespace Finhub.API.Controllers
                 .Include(g => g.Wallets)
                     .ThenInclude(w => w.Transactions)
                 .Include(g => g.Wallets)
-                    .ThenInclude(w => w.Budgets) // 💡 QUAN TRỌNG: Kéo thêm Budgets để lấy hạn mức
+                    .ThenInclude(w => w.Budgets) // thêm Budgets để lấy hạn mức
                 .FirstOrDefaultAsync(g => g.GroupId == groupId);
 
             if (group == null) return NotFound(new { Message = "Không tìm thấy nhóm!" });
@@ -117,7 +117,7 @@ namespace Finhub.API.Controllers
             {
                 var txs = w.Transactions ?? new List<Transaction>();
 
-                // 💡 LOGIC CHUẨN XÁC ĐỂ KHÔNG PHÁ VỠ TÍNH NĂNG END GOAL:
+                // END GOAL:
                 // Nếu ví có Budget -> Allocated là tổng Budget (Ví tạo bằng tay)
                 // Nếu ví KHÔNG có Budget -> Allocated là CurrentBalance (Ví chuyển từ Goal sang)
                 var allocated = (w.Budgets != null && w.Budgets.Any())
@@ -136,7 +136,7 @@ namespace Finhub.API.Controllers
                     color = group.ThemeColor ?? "#15476C",
                     allocated = allocated,
                     spent = spent,
-                    currentBalance = w.CurrentBalance, // 💡 Trả về thêm Balance thực tế để mobile check
+                    currentBalance = w.CurrentBalance,
                     members = membersList,
                     myRole = myRole
                 };
@@ -175,8 +175,6 @@ namespace Finhub.API.Controllers
             };
 
             _context.GroupMembers.Add(newMember);
-
-            // Lưu cả 2 bảng cùng 1 lúc
             await _context.SaveChangesAsync();
 
             return Ok(new
@@ -208,7 +206,7 @@ namespace Finhub.API.Controllers
                     OwnerUserId = userId,
                     GroupId = groupId,
                     Name = request.Name,
-                    CurrentBalance = 0, // 👈 Luôn bằng 0 vì mẹ chưa đưa tiền thật
+                    CurrentBalance = 0, // Bằng 0 vì mẹ chưa đưa tiền thật
                     IsArchived = false,
                     CreatedAt = DateTime.UtcNow,
                     Currency = "VND",
@@ -216,7 +214,7 @@ namespace Finhub.API.Controllers
                 };
                 _context.Wallets.Add(newWallet);
 
-                // 2. 💡 Tạo Budget đi kèm Ví để gán Hạn mức cấp phép (Allocated)
+                // 2. Tạo Budget đi kèm Ví để gán Hạn mức cấp phép (Allocated)
                 if (request.AllocatedAmount > 0)
                 {
                     var newBudget = new Budget
@@ -227,7 +225,7 @@ namespace Finhub.API.Controllers
                         AmountLimit = request.AllocatedAmount,
                         BudgetType = "Monthly",
                         StartDate = DateTime.UtcNow,
-                        EndDate = DateTime.UtcNow.AddMonths(1), // Mặc định chu kỳ 1 tháng
+                        EndDate = DateTime.UtcNow.AddMonths(1), // tạm thời chu kì 1 tháng (upgrade sau)
                         CreatedAt = DateTime.UtcNow
                     };
                     _context.Budgets.Add(newBudget);
@@ -250,19 +248,19 @@ namespace Finhub.API.Controllers
             }
         }
 
-        // 🆕 API XÓA HOẶC RỜI NHÓM (CÓ HOÀN TIỀN)
+        // XÓA / RỜI NHÓM (CÓ HOÀN TIỀN)
         [HttpDelete("{groupId}/leave")]
         public async Task<IActionResult> LeaveOrDeleteGroup(Guid groupId)
         {
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
-            // Mở Transaction để đảm bảo tính toàn vẹn dữ liệu khi hoàn tiền
+            // Mở Transaction để khi hoàn tiền
             using var dbTransaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // 1. Lấy thông tin nhóm kèm theo thành viên và các ví của nhóm
+                // 1. Lấy thông tin nhóm 
                 var group = await _context.Groups
                     .Include(g => g.GroupMembers)
                     .Include(g => g.Wallets)
@@ -271,9 +269,7 @@ namespace Finhub.API.Controllers
                 if (group == null)
                     return NotFound(new { Message = "Không tìm thấy nhóm này!" });
 
-                // =============================================================
                 // TRƯỜNG HỢP 1: USER LÀ TRƯỞNG NHÓM -> GIẢI TÁN NHÓM & HOÀN TIỀN
-                // =============================================================
                 if (group.OwnerId == userId)
                 {
                     // Tính tổng tiền còn lại của tất cả các ví trong nhóm
@@ -351,14 +347,12 @@ namespace Finhub.API.Controllers
                     _context.Groups.Remove(group);
 
                     await _context.SaveChangesAsync();
-                    await dbTransaction.CommitAsync(); // Xác nhận lưu vĩnh viễn
+                    await dbTransaction.CommitAsync();
 
                     return Ok(new { Message = "Đã giải tán nhóm và hoàn tiền thành công!" });
                 }
 
-                // =============================================================
-                // TRƯỜNG HỢP 2: USER LÀ THÀNH VIÊN -> RỜI KHỎI NHÓM
-                // =============================================================
+                // TRƯỜNG HỢP 2: USER LÀ THÀNH VIÊN RỜI KHỎI NHÓM
                 else
                 {
                     var memberRecord = group.GroupMembers.FirstOrDefault(m => m.UserId == userId);

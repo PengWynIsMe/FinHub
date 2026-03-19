@@ -25,19 +25,18 @@ namespace Finhub.API.Controllers
             return userId;
         }
 
-        // 1. LẤY DANH SÁCH YÊU CẦU CHI TIÊU (Dùng cho tab Expense Request)
+        // 1. lấy list request
         [HttpGet("requests")]
         public async Task<IActionResult> GetExpenseRequests()
         {
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
-            // Query join giữa Notification, Transaction, Wallet và User
             var requests = await (from n in _context.Notifications
                                   join t in _context.Transactions on n.RelatedEntityId equals t.TransactionId
                                   join w in _context.Wallets on t.WalletId equals w.WalletId
                                   join c in _context.Categories on t.CategoryId equals c.CategoryId into tc
-                                  from cat in tc.DefaultIfEmpty() // Left join category (đề phòng ko có)
+                                  from cat in tc.DefaultIfEmpty()
                                   where n.RecipientUserId == userId
                                      && n.EntityType == "ExpenseRequest"
                                      && n.Status == "Unread"
@@ -45,7 +44,7 @@ namespace Finhub.API.Controllers
                                   orderby n.CreatedAt descending
                                   select new
                                   {
-                                      id = n.NotificationId.ToString(), // ID của Notification dùng để Accept/Reject
+                                      id = n.NotificationId.ToString(),
                                       transactionId = t.TransactionId,
                                       userName = n.SenderUser != null ? n.SenderUser.FullName : "Member",
                                       userAvatar = n.SenderUser != null && !string.IsNullOrEmpty(n.SenderUser.AvatarUrl)
@@ -54,14 +53,14 @@ namespace Finhub.API.Controllers
                                       title = !string.IsNullOrEmpty(t.Note) ? t.Note : "Giao dịch",
                                       category = cat != null ? cat.Name : "Chưa phân loại",
                                       date = t.TransactionDate.ToString("dd/MM/yyyy"),
-                                      amount = -t.Amount, // 💡 UI của bạn cần số âm để hiện màu đỏ
+                                      amount = -t.Amount, 
                                       walletName = w.Name
                                   }).ToListAsync();
 
             return Ok(requests);
         }
 
-        // 2. ADMIN BẤM "ACCEPT" ĐỂ CHẤP NHẬN YÊU CẦU CHI TIÊU
+        // 2. ACCEPT
         [HttpPut("{notificationId}/accept")]
         public async Task<IActionResult> AcceptExpenseRequest(Guid notificationId)
         {
@@ -78,17 +77,17 @@ namespace Finhub.API.Controllers
             var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.WalletId == transaction.WalletId);
             if (wallet == null) return BadRequest(new { Message = "Không tìm thấy ví nguồn." });
 
-            // THỰC THI CHÍNH THỨC: Trừ tiền ví và đổi status
+            // Trừ tiền ví và đổi status
             wallet.CurrentBalance -= transaction.Amount;
             transaction.Status = "Completed";
-            notification.Status = "Read"; // Đánh dấu đã xử lý
+            notification.Status = "Read"; 
 
             await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Đã duyệt giao dịch thành công!" });
         }
 
-        // 3. ADMIN BẤM "NÚT X" ĐỂ TỪ CHỐI GIAO DỊCH
+        // 3. Reject 
         [HttpDelete("{notificationId}/reject")]
         public async Task<IActionResult> RejectExpenseRequest(Guid notificationId)
         {
@@ -101,10 +100,10 @@ namespace Finhub.API.Controllers
             var transaction = await _context.Transactions.FirstOrDefaultAsync(t => t.TransactionId == notification.RelatedEntityId);
             if (transaction != null && transaction.Status == "Pending")
             {
-                transaction.Status = "Rejected"; // Hủy bỏ, tiền không bị trừ
+                transaction.Status = "Rejected"; 
             }
 
-            notification.Status = "Read"; // Ẩn khỏi UI
+            notification.Status = "Read";
 
             await _context.SaveChangesAsync();
 

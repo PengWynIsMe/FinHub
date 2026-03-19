@@ -58,7 +58,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await SecureStore.setItemAsync('userToken', token);
       set({ token });
 
-      // ✅ Fetch /User/me để lấy primaryWalletId
+      //  Fetch /User/me để lấy primaryWalletId
       const user = await fetchProfile(token);
       set({ user, isLoading: false });
 
@@ -119,7 +119,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (token) {
         set({ token });
 
-        // ✅ Fetch profile khi app khởi động lại (đã có token cũ)
+        //  Fetch profile khi app khởi động lại (đã có token cũ)
         const user = await fetchProfile(token);
         if (user) {
           set({ user });

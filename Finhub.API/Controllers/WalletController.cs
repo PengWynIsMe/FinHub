@@ -127,7 +127,7 @@ namespace Finhub.API.Controllers
         }
 
 
-        //  API LẤY CHI TIẾT VÍ CHUNG (SHARED WALLET)
+        //  chi tiết ví chung
         [HttpGet("{id}")]
         public async Task<IActionResult> GetWalletById(Guid id)
         {
@@ -143,11 +143,11 @@ namespace Finhub.API.Controllers
 
             if (wallet == null) return NotFound(new { Message = "Không tìm thấy ví!" });
 
-            // Tính toán Allocated và Spent (Giữ nguyên logic kế toán)
+            // Tính toán Allocated và Spent
             var allocated = wallet.Budgets != null ? wallet.Budgets.Sum(b => b.AmountLimit) : 0;
             var spent = wallet.Budgets != null ? wallet.Budgets.SelectMany(b => b.Transactions ?? new List<Transaction>()).Where(t => t.Type == "Expense").Sum(t => t.Amount) : 0;
 
-            // Danh sách thành viên
+            // list thành viên
             var membersList = new List<object>();
             if (wallet.Group != null)
             {
@@ -172,18 +172,14 @@ namespace Finhub.API.Controllers
                 }
             }
 
-            // 💡 1. TẠO RỔ CHỨA TẤT CẢ GIAO DỊCH
             var allTransactions = new List<Transaction>();
 
-            // Nhặt giao dịch Nạp tiền bỏ vào rổ
             if (wallet.Transactions != null)
                 allTransactions.AddRange(wallet.Transactions);
 
-            // Nhặt giao dịch Chi tiêu (từ các Budget) bỏ vào rổ
             if (wallet.Budgets != null)
                 allTransactions.AddRange(wallet.Budgets.SelectMany(b => b.Transactions ?? new List<Transaction>()));
 
-            // 💡 2. SẮP XẾP VÀ TRẢ VỀ FRONTEND
             var transactionsList = allTransactions
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(10)
@@ -191,7 +187,7 @@ namespace Finhub.API.Controllers
                 {
                     id = t.TransactionId,
                     amount = t.Amount,
-                    type = t.Type, // Trả về Type để Frontend tô màu (Xanh/Đỏ)
+                    type = t.Type, 
                     note = t.Note ?? (t.Type == "Income" ? "Nạp quỹ" : "Chi tiêu"),
                     date = t.CreatedAt.ToString("dd/MM/yyyy HH:mm"),
                     userName = t.User?.FullName ?? (t.Type == "Income" ? "Hệ thống" : "Thành viên"),
@@ -209,7 +205,7 @@ namespace Finhub.API.Controllers
                 allocated = allocated,
                 spent = spent,
                 balance = wallet.CurrentBalance,
-                transactions = transactionsList, // 👈 Truyền rổ giao dịch xuống
+                transactions = transactionsList,
                 members = membersList
             });
         }
@@ -220,7 +216,6 @@ namespace Finhub.API.Controllers
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
-            // Dùng Transaction của Database để đảm bảo: Nếu lỗi thì không bị mất tiền oan
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
@@ -244,7 +239,7 @@ namespace Finhub.API.Controllers
                 };
                 _context.Transactions.Add(expenseTx);
 
-                // 2. Kiểm tra và cộng tiền Ví Chung (Đích)
+                // 2. Kiểm tra và cộng tiền Ví Chung 
                 var destWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.WalletId == request.DestinationWalletId);
                 if (destWallet == null) return BadRequest(new { Message = "Không tìm thấy ví nhóm." });
 
@@ -264,7 +259,6 @@ namespace Finhub.API.Controllers
                 };
                 _context.Transactions.Add(incomeTx);
 
-                // 3. Lưu tất cả thay đổi
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
@@ -272,7 +266,7 @@ namespace Finhub.API.Controllers
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(); // Nếu lỗi thì Rollback
+                await transaction.RollbackAsync(); 
                 return StatusCode(500, new { Message = "Lỗi hệ thống khi nạp tiền", Error = ex.Message });
             }
         }
@@ -344,7 +338,7 @@ namespace Finhub.API.Controllers
             if (userId == Guid.Empty) return Unauthorized();
 
             var wallet = await _context.Wallets
-                .Include(w => w.Transactions) // 💡 Kéo Transactions để tính tổng nạp
+                .Include(w => w.Transactions)
                 .FirstOrDefaultAsync(w => w.WalletId == walletId);
 
             if (wallet == null) return NotFound(new { Message = "Không tìm thấy ví!" });
@@ -352,7 +346,7 @@ namespace Finhub.API.Controllers
             var permission = await _context.AccountPermissions
                 .FirstOrDefaultAsync(p => p.WalletId == walletId && p.GranteeUserId != userId);
 
-            // 💡 Tính Tổng tiền nạp vào (Income) làm mốc 100% để tính phần trăm
+            // 💡 Tính Tổng tiền nạp vào (Income) làm mốc
             var totalFunds = wallet.Transactions != null
                 ? wallet.Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount)
                 : 0;
@@ -364,7 +358,7 @@ namespace Finhub.API.Controllers
             {
                 alertEnabled = permission?.RequireRequestForOverLimit ?? false,
                 maxAmount = permission?.MaxAmountPerTransaction ?? 0,
-                totalFunds = totalFunds // 👈 Gửi cho Mobile để tính %
+                totalFunds = totalFunds 
             });
         }
 

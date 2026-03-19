@@ -13,13 +13,13 @@ const formatVND = (amount: number) => amount.toString().replace(/\B(?=(\d{3})+(?
 
 export default function SharedWalletDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>(); // ID Của Ví
+  const { id } = useLocalSearchParams<{ id: string }>(); 
   const user = useAuthStore((state: any) => state.user);
 
   const [walletDetail, setWalletDetail] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 1. GỌI API LẤY CHI TIẾT VÍ
+  // CHI TIẾT VÍ
   useFocusEffect(
     useCallback(() => {
       const fetchWalletDetail = async () => {
@@ -46,7 +46,6 @@ export default function SharedWalletDetailScreen() {
     );
   }
 
-  // 2. TÍNH TOÁN DỮ LIỆU
   const spent = walletDetail.spent || 0;
   const availableBalance = walletDetail.balance || 0;
   const totalFund = availableBalance + spent;
@@ -56,10 +55,9 @@ export default function SharedWalletDetailScreen() {
   const TRANSACTIONS = walletDetail.transactions ?? [];
   const MEMBERS = walletDetail.members ?? [];
 
-  // Tìm Role của User hiện tại (Lấy từ mảng MEMBERS trả về)
+  // Tìm Role của User
   const myMemberInfo = MEMBERS.find((m: any) => m.id === user?.userId);
-  // Nếu API chưa trả về Role, ta mặc định người tạo (Admin) là có name "Admin", hoặc bạn có thể gọi thêm logic tùy ý.
-  // Tạm thời, nếu không tìm thấy role, ta sẽ show "Member"
+  // role khác admin thì tạm thời member
   const myRole = myMemberInfo?.role || (MEMBERS[0]?.id === user?.userId ? 'Admin' : 'Member');
 
 
@@ -99,7 +97,7 @@ export default function SharedWalletDetailScreen() {
             </View>
           </View>
           
-          {/* 💡 VỊ TRÍ 1: Số to ở giữa là Available Balance (Số dư khả dụng) */}
+          {/* Số dư khả dụng */}
           <Text style={styles.remainingLabel}>Available Balance</Text>
           <Text style={styles.remainingAmount}>{formatVND(availableBalance)}</Text>
           
@@ -113,7 +111,7 @@ export default function SharedWalletDetailScreen() {
               <Text style={styles.statValue}>{formatVND(spent)}</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
-              {/* 💡 VỊ TRÍ 2: Thay Allocated bằng Total Fund (Tổng quỹ) */}
+              {/* Total Fund */}
               <Text style={styles.statLabel}>Total Fund</Text>
               <Text style={styles.statValue}>{formatVND(totalFund)}</Text>
             </View>
@@ -139,7 +137,7 @@ export default function SharedWalletDetailScreen() {
           </ScrollView>
         </View>
 
-        {/* ─── ACTION BUTTONS (Nạp tiền & Chi tiêu) ─── */}
+        {/* ─── Add button ─── */}
         <View style={styles.actionButtonsRow}>
           <TouchableOpacity 
             style={[styles.btnAction, { backgroundColor: '#10B981', shadowColor: '#10B981' }]} 
@@ -181,7 +179,7 @@ export default function SharedWalletDetailScreen() {
                   <Text style={styles.txDate}>{tx.userName} • {tx.date}</Text>
                 </View>
 
-                {/* 💡 VẤN ĐỀ 3: Check tx.type là Income (+) Xanh, hay Expense (-) Đỏ */}
+                {/* Check tx.type là Income / Expense */}
                 <Text style={[styles.txAmount, { color: tx.type === 'Income' ? '#10B981' : '#FF4267' }]}>
                   {tx.type === 'Income' ? '+' : '-'}{formatVND(tx.amount)}
                 </Text>
@@ -209,7 +207,7 @@ const styles = StyleSheet.create({
   cardHeaderInfo: { flex: 1, alignItems: 'flex-start' }, 
   walletName: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: '#1F2937', marginBottom: 4 }, 
   
-  // 💡 Bổ sung CSS cho Role Badge
+  // Role Badge
   roleBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   roleBadgeAdmin: { backgroundColor: '#EAF4FA' },
   roleBadgeMember: { backgroundColor: '#F3F4F6' },

@@ -31,10 +31,9 @@ export default function GroupScreen() {
   const [groups, setGroups] = useState<GroupData[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
 
-  // 💡 1. KÉO HÀM NÀY RA NGOÀI ĐỂ DÙNG CHUNG
   const fetchGroups = async () => {
     try {
-      setIsLoading(true); // Để nó xoay xoay khi đang load lại dữ liệu
+      setIsLoading(true); 
       const res = await axiosClient.get('/Group');
       setGroups(res.data);
     } catch (error) {
@@ -44,7 +43,6 @@ export default function GroupScreen() {
     }
   };
 
-  // 💡 2. GỌI HÀM KHI MÀN HÌNH ĐƯỢC FOCUS
   useFocusEffect(
     useCallback(() => {
       fetchGroups();
@@ -67,12 +65,12 @@ export default function GroupScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* 💡 3. TRUYỀN HÀM fetchGroups VÀO onSuccess */}
+      {/* onSuccess */}
       {groups.map((group) => (
         <GroupCard 
             key={group.id} 
             group={group} 
-            onSuccess={fetchGroups} // <--- ĐIỂM ĂN TIỀN Ở ĐÂY
+            onSuccess={fetchGroups} 
         />
       ))}
       
@@ -115,7 +113,7 @@ export default function GroupScreen() {
         <Text style={styles.headerTitle}>Role management</Text>
       </View> */}
 
-      {/* Nếu đang tải thì quay đều */}
+      {/* đang tải */}
       {isLoading && groups.length === 0 ? (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <ActivityIndicator size="large" color={COLORS.primary} />
@@ -128,7 +126,6 @@ export default function GroupScreen() {
   );
 }
 
-// ─── CSS GIỮ NGUYÊN 100% CỦA BẠN ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   header: {

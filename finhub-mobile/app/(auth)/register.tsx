@@ -18,7 +18,6 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuthStore } from "../../src/stores/auth.store";
 
-// ─── Floating Dot Component ──────────────────────────────────────────────
 interface FloatingDotProps {
   color: string;
   size: number;
@@ -73,7 +72,6 @@ const FloatingDot: React.FC<FloatingDotProps> = ({ color, size, style, delay = 0
   );
 };
 
-// ─── Phone Illustration ──────────────────────────────────────────────────
 const PhoneIllustration = () => (
   <View style={styles.illustrationWrapper}>
     {/* Background circle */}
@@ -98,7 +96,6 @@ const PhoneIllustration = () => (
   </View>
 );
 
-// ─── Main Screen ─────────────────────────────────────────────────────────
 export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -245,7 +242,7 @@ export default function RegisterScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -270,7 +267,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
-  // ── Scroll Content (White Sheet) ──
+  // ── Scroll Content  ──
   scrollContent: {
     flexGrow: 1,
     backgroundColor: "#fff",

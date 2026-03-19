@@ -38,7 +38,6 @@ export default function SharedWalletScreen() {
     }, [groupId])
   );
 
-  // ✅ handleDeleteWallet nằm NGOÀI renderSharedWalletCard, ở cấp component
   const handleDeleteWallet = async () => {
     if (!selectedWallet) return;
     try {
@@ -101,7 +100,6 @@ export default function SharedWalletScreen() {
                 </Text>
               </View>
             ) : (
-              // ✅ onPress gọi đúng hàm, set đúng item
               <TouchableOpacity style={styles.moreBtn} onPress={() => {
                 setSelectedWallet(item);
                 setShowDeleteModal(true);
@@ -131,7 +129,6 @@ export default function SharedWalletScreen() {
     );
   };
 
-  // ✅ return của component chính — modal nằm ở đây, KHÔNG nằm trong renderSharedWalletCard
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -175,13 +172,12 @@ export default function SharedWalletScreen() {
         </ScrollView>
       )}
 
-      {/* ✅ Modal nằm TRONG return của component chính, NGOÀI ScrollView */}
       {showDeleteModal && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Xóa ví chung?</Text>
+            <Text style={styles.modalTitle}>Delete?</Text>
             <Text style={styles.modalMessage}>
-              Bạn có chắc muốn xóa ví "{selectedWallet?.name}" không? Hành động này không thể hoàn tác.
+              Do you want delete wallet "{selectedWallet?.name}"? This action can't be roll back.
             </Text>
             <View style={styles.modalActions}>
               <TouchableOpacity

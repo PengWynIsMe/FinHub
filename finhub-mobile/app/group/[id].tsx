@@ -14,10 +14,8 @@ import { Feather } from '@expo/vector-icons';
 export default function GroupManagementScreen() {
   const router = useRouter();
   
-  // Lấy dữ liệu id và name từ thẻ GroupCard truyền sang
   const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
 
-  // ─── 1. SỬA ĐƯỜNG DẪN ROUTE VÀ THÊM VÀO TRONG COMPONENT ───
   const MANAGEMENT_MENUS = [
     {
       id: 'members',
@@ -53,7 +51,7 @@ export default function GroupManagementScreen() {
           <Text style={styles.headerTitle}>{name || 'My Group'}</Text>
         </View>
 
-        {/* Nút Chuông thông báo */}
+        {/* noti */}
         <TouchableOpacity 
           style={styles.bellButton} 
           activeOpacity={0.7}
@@ -80,7 +78,6 @@ export default function GroupManagementScreen() {
               if (menu.route) {
                 router.push({
                   pathname: menu.route as any, 
-                  // 💡 ĐÃ SỬA: Đổi groupId thành id để khớp với trang members.tsx
                   params: { id: id }      
                 });
               }
@@ -101,7 +98,6 @@ export default function GroupManagementScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E3F6FF' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 20 },

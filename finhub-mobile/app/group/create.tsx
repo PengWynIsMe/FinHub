@@ -31,15 +31,13 @@ export default function CreateGroupScreen() {
   const [description, setDescription] = useState('');
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   
-  // 🆕 State lưu đường dẫn ảnh nhóm
   const [imageUri, setImageUri] = useState<string | null>(null);
 
-  // 🆕 Hàm mở thư viện và chọn ảnh
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      aspect: [1, 1], // Ép cắt ảnh hình vuông để bo góc cho đẹp
+      aspect: [1, 1],
       quality: 0.8,
     });
 
@@ -49,14 +47,12 @@ export default function CreateGroupScreen() {
   };
 
   const handleConfirm = async () => {
-    // 1. Kiểm tra không được để trống tên
     if (!groupName.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập tên nhóm!');
       return;
     }
 
     try {
-      // 2. Gom dữ liệu gửi xuống Backend
       const payload = {
         name: groupName,
         currency: selectedCurrency,
@@ -66,13 +62,11 @@ export default function CreateGroupScreen() {
 
       console.log('Đang gửi API Create Group:', payload);
 
-      // 3. Gọi API POST /Group
       const res = await axiosClient.post('/Group', payload);
       
       console.log('Tạo thành công:', res.data);
       Alert.alert('Thành công', 'Nhóm đã được tạo!');
-      
-      // 4. Chuyển sang trang Invite Share kèm theo ID của nhóm vừa tạo
+
       router.push({
         pathname: '/group/invite-share',
         params: { groupId: res.data.groupId, groupName: groupName }
@@ -101,23 +95,19 @@ export default function CreateGroupScreen() {
         {/* Form Card */}
         <View style={styles.formCard}>
           
-          {/* ─── 🆕 Avatar với tính năng chọn ảnh ─── */}
           <TouchableOpacity 
             style={styles.avatarContainer} 
             activeOpacity={0.8}
-            onPress={pickImage} // Gọi hàm chọn ảnh khi bấm vào
+            onPress={pickImage} 
           >
             {imageUri ? (
-              // Nếu đã có ảnh thì hiển thị ảnh
               <Image source={{ uri: imageUri }} style={styles.uploadedAvatar} />
             ) : (
-              // Nếu chưa có ảnh thì hiển thị dấu +
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarPlus}>+</Text>
               </View>
             )}
             
-            {/* Tùy chọn: Thêm một cái badge nhỏ nhắn góc dưới báo hiệu có thể sửa ảnh */}
             {imageUri && (
                <View style={styles.editBadge}>
                  <Text style={{ fontSize: 10, color: '#FFF' }}>✏️</Text>
@@ -169,7 +159,7 @@ export default function CreateGroupScreen() {
         </View>
       </ScrollView>
 
-      {/* Currency Modal (Giữ nguyên) */}
+      {/* Currency Modal */}
       <Modal
         visible={showCurrencyModal}
         transparent
@@ -217,17 +207,17 @@ const styles = StyleSheet.create({
   backButton: { padding: 4 }, backText: { fontSize: 28, color: COLORS.black }, headerTitle: { fontSize: 18, fontWeight: '600', color: COLORS.black },
   formCard: { backgroundColor: COLORS.white, borderRadius: 16, padding: 20, alignItems: 'center' },
   
-  // ─── STYLES CHO AVATAR ───
+  // ───  AVATAR ───
   avatarContainer: {
     marginBottom: 24,
-    position: 'relative', // Để định vị cái editBadge
+    position: 'relative', 
   },
   avatarPlaceholder: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#E8E8ED', alignItems: 'center', justifyContent: 'center' },
   avatarPlus: { fontSize: 36, color: '#C7C7CC', fontWeight: '300' },
   uploadedAvatar: {
     width: 80,
     height: 80,
-    borderRadius: 40, // Bo tròn ảnh
+    borderRadius: 40,
   },
   editBadge: {
     position: 'absolute',
@@ -243,11 +233,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.white,
   },
 
-  // ─── CÁC STYLES CŨ (Giữ nguyên) ───
+
   input: { width: '100%', height: 50, borderRadius: 25, borderWidth: 1, borderColor: '#E5E5EA', paddingHorizontal: 20, fontSize: 16, marginBottom: 16, flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.white },
   inputText: { flex: 1, fontSize: 16, color: COLORS.black },
   chevron: { fontSize: 20, color: '#C7C7CC' },
-  textArea: { height: 100, paddingTop: 16, borderRadius: 20 }, // Sửa bo góc cho textarea một chút cho hợp nhãn
+  textArea: { height: 100, paddingTop: 16, borderRadius: 20 }, 
   confirmButton: { width: '100%', height: 50, backgroundColor: COLORS.primary, borderRadius: 25, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   confirmButtonText: { color: COLORS.white, fontSize: 16, fontWeight: '600' },
   

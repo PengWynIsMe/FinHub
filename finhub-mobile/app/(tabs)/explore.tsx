@@ -10,7 +10,7 @@ import {
   SafeAreaView,
 } from "react-native";
 
-// --- Dữ liệu giả lập (Sau này có icon bạn thay vào thẻ Text nhé) ---
+// --- mockdata
 const features = [
   { id: "interface", label: "Interface", icon: "📱" },
   { id: "category", label: "Category", icon: "🗂️" },
@@ -62,40 +62,36 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        {/* Khoảng trống dưới cùng lớn hơn để cuộn thoải mái */}
         <View style={{ height: 140 }} />
       </ScrollView>
 
-      {/* ─── AI Assistant Floating Button ─── */}
+      {/* ─── AI Assistant ─── */}
       <TouchableOpacity
         style={styles.aiContainer}
         activeOpacity={0.8}
         onPress={() => {
           console.log("Mở trợ lý AI...");
           router.push("/modal/ai-assistant");
-          // Gắn router mở modal AI ở đây
         }}
       >
-        {/* Bóng thoại chuẩn theo Figma: 15px 15px 0px 15px */}
+
         <View style={styles.chatBubble}>
           <Text style={styles.chatText}>Hello there! 🙋‍♂️</Text>
         </View>
         
-        {/* Avatar Cún */}
+        {/* Linh vật */}
         <View style={styles.dogAvatarContainer}>
           <Text style={styles.dogEmoji}>🦊</Text> 
-          {/* Lưu ý: Bạn có thể thay bằng thẻ <Image> khi có file Cún thật */}
         </View>
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ─────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E3F6FF", // Mã màu nền trích xuất từ Figma
+    backgroundColor: "#E3F6FF", 
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -103,7 +99,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: "Poppins_600SemiBold",
-    fontSize: 18, // Đưa về 18px theo đúng Figma
+    fontSize: 18, 
     color: "#343434",
     lineHeight: 28,
     marginBottom: 12,
@@ -111,12 +107,11 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 10, // Figma để 5px nhưng 10px sẽ giúp app nhìn hiện đại hơn một chút
+    borderRadius: 10,
     paddingTop: 24,
     paddingHorizontal: 16,
     paddingBottom: 8,
     marginBottom: 24,
-    // Đổ bóng nhẹ cho Card
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -129,7 +124,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   menuItem: {
-    width: "33.33%", // 3 cột
+    width: "33.33%", 
     alignItems: "center",
     marginBottom: 20,
   },
@@ -137,7 +132,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: "#F4F6F8", // Có thể thay bằng trong suốt nếu icon đã có nền
+    backgroundColor: "#F4F6F8",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
@@ -147,16 +142,16 @@ const styles = StyleSheet.create({
   },
   menuLabel: {
     fontFamily: "Poppins_500Medium",
-    fontSize: 11, // Figma để 8px (quá nhỏ để đọc trên mobile), tôi tăng lên 11px cho UX tốt nhất
+    fontSize: 11,
     color: "#000000",
     textAlign: "center",
     lineHeight: 16,
   },
 
-  // ── AI Assistant Styles ──
+  // ── AI Assistant ──
   aiContainer: {
     position: "absolute",
-    bottom: 120, // ⬆️ Đã đẩy lên cao hơn nhiều để không sát thanh Navigation
+    bottom: 120,
     right: 20,
     flexDirection: "row",
     alignItems: "flex-end",
@@ -166,14 +161,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    // Bo góc chuẩn Figma: Trái trên, Phải trên, Phải dưới(0), Trái dưới
     borderTopLeftRadius: 15,
     borderTopRightRadius: 15,
     borderBottomRightRadius: 0,
     borderBottomLeftRadius: 15,
     marginRight: 8,
     marginBottom: 10,
-    // Đổ bóng bong bóng
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -189,7 +182,7 @@ const styles = StyleSheet.create({
     width: 45,
     height: 45,
     borderRadius: 22.5,
-    backgroundColor: "#FFFFFF", // Thay nền cam thành trắng/trong suốt nếu icon là ảnh PNG
+    backgroundColor: "#FFFFFF", 
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",

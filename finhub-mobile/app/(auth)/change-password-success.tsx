@@ -10,13 +10,10 @@ import {
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 
-// ─── Khối minh họa (Mock Illustration) bằng Code ───
 const SuccessIllustration = () => (
   <View style={styles.illustrationContainer}>
-    {/* Vệt nền xám mờ đằng sau */}
     <View style={styles.backgroundBlob} />
-    
-    {/* Các element giả lập theo thiết kế */}
+
     <View style={styles.shieldContainer}>
       <MaterialCommunityIcons name="shield-check" size={80} color="#15476C" />
     </View>
@@ -34,11 +31,11 @@ export default function ChangePasswordSuccessScreen() {
     <View style={styles.screen}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* ─── Header (Chỉ có nút Back) ─── */}
+      {/* ─── Header ─── */}
       <View style={styles.headerArea}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.push("/login")} // Đã xong thì back về thẳng Login luôn
+          onPress={() => router.push("/login")} 
           activeOpacity={0.7}
         >
           <Feather name="chevron-left" size={28} color="#343434" />
@@ -65,7 +62,6 @@ export default function ChangePasswordSuccessScreen() {
           style={styles.btnOk}
           activeOpacity={0.8}
           onPress={() => {
-            // Đưa người dùng về thẳng trang đăng nhập
             router.push("/login");
           }}
         >
@@ -94,10 +90,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 24,
-    marginTop: -40, // Đẩy cụm nội dung lên trên một chút cho cân đối
+    marginTop: -40, 
   },
   
-  // ── Illustration Styles ──
   illustrationContainer: {
     width: 200,
     height: 180,
@@ -112,7 +107,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 60,
     backgroundColor: "#F2F1F9",
-    borderRadius: 30, // Hình bầu dục nằm ngang
+    borderRadius: 30, 
   },
   shieldContainer: {
     zIndex: 10,
@@ -127,14 +122,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 15,
     left: 40,
-    transform: [{ rotate: "45deg" }], // Xoay cái chìa khóa cho nghệ thuật
+    transform: [{ rotate: "45deg" }],
   },
 
   // ── Typography ──
   title: {
     fontFamily: "Poppins_600SemiBold",
     fontSize: 22,
-    color: "#15476C", // Màu xanh chủ đạo
+    color: "#15476C", 
     textAlign: "center",
     lineHeight: 32,
     marginBottom: 16,
@@ -150,7 +145,7 @@ const styles = StyleSheet.create({
   // ── Footer ──
   footer: {
     paddingHorizontal: 24,
-    paddingBottom: Platform.OS === "ios" ? 40 : 24, // Căn lề dưới
+    paddingBottom: Platform.OS === "ios" ? 40 : 24,
   },
   btnOk: {
     height: 52,

@@ -8,13 +8,12 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router'; // 👈 Thêm useLocalSearchParams
+import { useRouter, useLocalSearchParams } from 'expo-router'; 
 import { COLORS } from '@/constants/theme';
 
 export default function GroupMembersScreen() {
   const router = useRouter();
   
-  // 💡 Hứng tham số groupName từ màn hình trước truyền sang
   const { groupName } = useLocalSearchParams<{ groupName: string }>();
 
   const [email, setEmail] = useState('');
@@ -49,17 +48,16 @@ export default function GroupMembersScreen() {
 
           <Text style={styles.successTitle}>Group Created!</Text>
           <Text style={styles.successSubtitle}>
-            {/* 💡 Hiển thị tên nhóm động ở đây (Nếu không có thì để mặc định) */}
             Success! Your group <Text style={{fontWeight: 'bold', color: COLORS.primary}}>"{groupName || 'New Group'}"</Text> is ready. Now, let's add members.
           </Text>
 
-          {/* Frequent Contacts Dropdown */}
+          {/* Frequent */}
           <TouchableOpacity style={styles.dropdown}>
             <Text style={styles.dropdownText}>Frequent Contacts</Text>
             <Text style={styles.chevron}>⌄</Text>
           </TouchableOpacity>
 
-          {/* Email Input */}
+          {/* Email */}
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -72,7 +70,7 @@ export default function GroupMembersScreen() {
 
           <Text style={styles.orText}>or</Text>
 
-          {/* Phone Input */}
+          {/* Phone */}
           <TextInput
             style={styles.input}
             placeholder="Phone number"
@@ -87,7 +85,7 @@ export default function GroupMembersScreen() {
             <Text style={styles.inviteButtonText}>Invite</Text>
           </TouchableOpacity>
 
-          {/* Share Link Button */}
+          {/* Link Button */}
           <TouchableOpacity style={styles.shareButton} activeOpacity={0.8}>
             <Text style={styles.shareButtonText}>
               Share Invite Link or Code
@@ -104,7 +102,6 @@ export default function GroupMembersScreen() {
   );
 }
 
-// Giữ nguyên Stylesheet của bạn
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scrollContent: { padding: 20 },

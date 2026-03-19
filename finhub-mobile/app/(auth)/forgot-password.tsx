@@ -18,13 +18,12 @@ import { router } from "expo-router";
 export default function ForgotPasswordScreen() {
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  // Nút Send chỉ sáng lên khi người dùng đã nhập số điện thoại
   const isFormValid = phoneNumber.trim().length > 0;
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.screen}>
-        {/* Dùng status bar chữ tối màu vì nền màn hình màu sáng */}
+
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
         {/* ─── Header ─── */}
@@ -59,9 +58,9 @@ export default function ForgotPasswordScreen() {
               placeholderTextColor="#CACACA"
               value={phoneNumber}
               onChangeText={setPhoneNumber}
-              keyboardType="phone-pad" // Hiển thị bàn phím số
+              keyboardType="phone-pad" 
               autoCapitalize="none"
-              autoFocus={true} // Tự động mở bàn phím khi vào trang
+              autoFocus={true}
             />
 
             {/* Helper Text */}
@@ -79,7 +78,6 @@ export default function ForgotPasswordScreen() {
               activeOpacity={0.8}
               onPress={() => {
                 console.log("Send recovery code to:", phoneNumber);
-                // Chuyển sang trang nhập OTP (nếu có)
                 router.push("/verify-otp"); 
               }}
             >
@@ -99,11 +97,11 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF", // Nền trắng chuẩn theo thiết kế
+    backgroundColor: "#FFFFFF", 
   },
 
   // ── Header ──
@@ -121,7 +119,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: "Poppins_600SemiBold",
     fontSize: 22,
-    color: "#343434", // Màu chữ xám đen
+    color: "#343434", 
   },
 
   // ── Scroll Content ──
@@ -135,15 +133,15 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontFamily: "Poppins_600SemiBold",
     fontSize: 13,
-    color: "#999999", // Màu xám nhạt như bản vẽ
+    color: "#999999", 
     marginBottom: 10,
     marginLeft: 4,
   },
   input: {
-    height: 52, // Hơi to hơn 1 chút để bấm thoải mái
+    height: 52,
     borderWidth: 1.5,
-    borderColor: "#E5E5E5", // Viền xám nhạt đồng bộ login/register
-    borderRadius: 26, // Bo tròn Pill shape
+    borderColor: "#E5E5E5", 
+    borderRadius: 26, 
     paddingHorizontal: 20,
     fontFamily: "Poppins_500Medium",
     fontSize: 16,
@@ -164,12 +162,12 @@ const styles = StyleSheet.create({
   // ── Send Button ──
   btnSend: {
     height: 52,
-    borderRadius: 26, // Pill shape
+    borderRadius: 26, 
     alignItems: "center",
     justifyContent: "center",
   },
   btnActive: {
-    backgroundColor: "#15476C", // Xanh chủ đạo
+    backgroundColor: "#15476C", 
     shadowColor: "#15476C",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -177,7 +175,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   btnDisabled: {
-    backgroundColor: "#F2F1F9", // Màu xám tím nhạt lúc chưa nhập
+    backgroundColor: "#F2F1F9", 
   },
   btnText: {
     fontFamily: "Poppins_600SemiBold",
@@ -185,6 +183,6 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   btnTextDisabled: {
-    color: "#FFFFFF", // Theo mockup, nút mờ nhưng chữ bên trong vẫn màu trắng
+    color: "#FFFFFF", 
   },
 });

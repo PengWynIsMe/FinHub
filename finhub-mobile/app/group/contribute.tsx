@@ -9,7 +9,6 @@ import axiosClient from '@/api/axiosClient';
 
 const formatVND = (amount: number) => amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
-// Kích hoạt LayoutAnimation cho Android (Để hiệu ứng xổ xuống mượt mà)
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
@@ -31,7 +30,7 @@ export default function ContributeScreen() {
   useEffect(() => {
     const fetchSources = async () => {
       try {
-        // Lấy danh sách Ví & Budget cá nhân (Gọi 2 API cùng lúc)
+        // Lấy danh sách Ví & Budget cá nhân 
         const [walletsRes, budgetsRes] = await Promise.all([
           axiosClient.get('/Wallet'),
           axiosClient.get('/Budget/summary') // Tận dụng API này để lấy budget cá nhân
@@ -75,7 +74,6 @@ export default function ContributeScreen() {
     try {
       const payload = {
         sourceWalletId: selectedSource.type === 'wallet' ? selectedSource.data.walletId : selectedSource.data.walletId, 
-        // Nếu API C# của bạn hỗ trợ trừ thẳng từ Budget, có thể gửi thêm SourceBudgetId ở đây
         destinationWalletId: walletId,
         amount: numAmount,
         note: note || `Nạp tiền từ ${selectedSource.data.name}`
@@ -112,7 +110,6 @@ export default function ContributeScreen() {
           </View>
         </View>
 
-        {/* Danh sách Nguồn tiền dạng Accordion */}
         <Text style={styles.label}>Select your Source Account</Text>
         
         {myAccounts.map((wallet) => {
@@ -121,7 +118,6 @@ export default function ContributeScreen() {
 
           return (
             <View key={wallet.walletId} style={styles.accordionGroup}>
-              {/* Thẻ Ví (Header) */}
               <TouchableOpacity 
                 style={[styles.walletHeader, isWalletSelected && styles.selectedItem]} 
                 activeOpacity={0.8}
@@ -144,7 +140,7 @@ export default function ContributeScreen() {
                 </View>
               </TouchableOpacity>
 
-              {/* Danh sách Budget (Body xổ ra) */}
+              {/* Danh sách Budget */}
               {isExpanded && wallet.budgets && wallet.budgets.length > 0 && (
                 <View style={styles.budgetsContainer}>
                   {wallet.budgets.map((budget: any) => {
@@ -203,7 +199,7 @@ const styles = StyleSheet.create({
   amountInput: { fontSize: 40, fontWeight: '700', color: '#15476C', textAlign: 'center', minWidth: 60 },
   currencyUnit: { fontSize: 18, fontWeight: '600', color: '#15476C', marginLeft: 8 },
 
-  // Styles cho Accordion
+  //Accordion
   accordionGroup: { marginBottom: 12, borderRadius: 16, borderWidth: 1.5, borderColor: '#F3F4F6', overflow: 'hidden' },
   walletHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#FFFFFF' },
   headerLeft: { flexDirection: 'row', alignItems: 'center' },

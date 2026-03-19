@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, Pla
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather, MaterialIcons } from '@expo/vector-icons';
 
-// Dữ liệu giả lập các ví Wyn đang tham gia
 const WYN_WALLETS = [
   { id: '2', name: 'Pocket money', icon: '🧸', allocated: 500000, spent: 0, color: '#F59E0B' },
 ];
@@ -12,11 +11,11 @@ const formatVND = (amount: number) => amount.toString().replace(/\B(?=(\d{3})+(?
 
 export default function MemberDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // Dùng ID này để fetch data thật
+  const { id } = useLocalSearchParams(); 
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ─── Header có nút Back ─── */}
+      {/* ─── Header ─── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Feather name="chevron-left" size={32} color="#000000" />
@@ -29,7 +28,7 @@ export default function MemberDetailScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
-        {/* ─── PROFILE INFO ─── */}
+        {/* ─── PROFILE ─── */}
         <View style={styles.profileSection}>
           <Image source={{ uri: 'https://i.pravatar.cc/100?img=12' }} style={styles.bigAvatar} />
           <View style={styles.profileInfo}>
@@ -37,13 +36,13 @@ export default function MemberDetailScreen() {
             
             <View style={styles.roleRow}>
               <Text style={styles.profileRole}>Role : <Text style={styles.profileRoleBold}>Member</Text></Text>
-              {/* Nút thay đổi role */}
+              {/* Nút role */}
               <TouchableOpacity style={styles.swapRoleBtn}>
                 <MaterialIcons name="swap-horiz" size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
-            {/* Toggle cấp quyền Global View cho Admin (Ví dụ UI) */}
+            {/* Toggle cấp quyền Global View */}
              <TouchableOpacity style={styles.permissionToggle}>
               <Feather name="eye" size={16} color="#10B981" />
               <Text style={styles.permissionText}>Global View Access: ON</Text>
@@ -94,14 +93,14 @@ export default function MemberDetailScreen() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#E3F6FF' },
     header: { 
-        flexDirection: 'row', // Dàn nút Back và Title nằm ngang
+        flexDirection: 'row', 
         alignItems: 'center', 
         paddingHorizontal: 16, 
         paddingTop: Platform.OS === 'android' ? 40 : 20, 
         paddingBottom: 20 
         },
     backButton: { 
-        paddingRight: 12, // Tạo khoảng cách giữa nút Back và chữ
+        paddingRight: 12, 
     },
     headerTitle: { 
         fontFamily: 'Poppins_600SemiBold', 
@@ -124,7 +123,7 @@ const styles = StyleSheet.create({
 
   sectionTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: '#1F2937', marginBottom: 16 },
 
-  // Wallet Card (Sao chép layout để giống ảnh)
+  // Wallet Card 
   walletCard: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 20, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 10, elevation: 3 },
   walletHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
   iconBox: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 12 },

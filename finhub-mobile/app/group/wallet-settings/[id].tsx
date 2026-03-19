@@ -35,10 +35,10 @@ export default function WalletSettingsScreen() {
         try {
           const res = await axiosClient.get(`/Wallet/${id}/settings`);
           setAlertEnabled(res.data.alertEnabled);
-          setTotalFunds(res.data.totalFunds || 0); // Lấy tổng quỹ từ Backend
+          setTotalFunds(res.data.totalFunds || 0);
           
           if (res.data.maxAmount > 0) {
-            setInputType('amount'); // Mặc định hiển thị VNĐ khi load từ DB lên
+            setInputType('amount');
             setInputValue(formatVND(res.data.maxAmount));
           }
         } catch (error) {
@@ -51,14 +51,12 @@ export default function WalletSettingsScreen() {
     }, [id])
   );
 
-  // 💡 Xử lý logic tính toán quy đổi chéo
   const isPercent = inputType === 'percent';
   const numericValue = parseFloat(inputValue.replace(/\./g, '')) || 0;
   
-  // Tính ra số tiền VNĐ cuối cùng để gửi cho Backend
+  // final result
   const finalAmount = isPercent ? (numericValue / 100) * totalFunds : numericValue;
   
-  // Chuỗi hiển thị bên dưới ô nhập
   const equivalentDisplay = isPercent
     ? `≈ ${formatVND(finalAmount)} VNĐ`
     : `≈ ${totalFunds > 0 ? ((numericValue / totalFunds) * 100).toFixed(1) : 0}% of total funds`;
@@ -66,7 +64,7 @@ export default function WalletSettingsScreen() {
   const handleInputChange = (text: string) => {
     if (isPercent) {
       const num = parseInt(text.replace(/[^0-9]/g, ''));
-      if (num > 100) setInputValue('100'); // Không cho nhập quá 100%
+      if (num > 100) setInputValue('100');
       else setInputValue(num ? num.toString() : '');
     } else {
       const num = text.replace(/[^0-9]/g, '');
@@ -85,7 +83,7 @@ export default function WalletSettingsScreen() {
     try {
       await axiosClient.put(`/Wallet/${id}/settings`, {
         alertEnabled: alertEnabled,
-        maxAmount: finalAmount // Backend chỉ cần biết VNĐ
+        maxAmount: finalAmount 
       });
       Alert.alert('Thành công', 'Đã cập nhật giới hạn chi tiêu!');
       router.back();
@@ -143,7 +141,6 @@ export default function WalletSettingsScreen() {
                 />
               </View>
 
-              {/* 💡 Ô NHẬP LIỆU NÂNG CẤP */}
               {alertEnabled && (
                 <View style={styles.thresholdContainer}>
                   <View style={styles.thresholdHeader}>
@@ -179,7 +176,7 @@ export default function WalletSettingsScreen() {
                     <Text style={styles.thresholdSuffix}>{isPercent ? '%' : 'VNĐ'}</Text>
                   </View>
 
-                  {/* 💡 Hiển thị quy đổi xấp xỉ bên dưới */}
+                  {/* quy đổi xấp xỉ bên dưới */}
                   {inputValue !== '' && (
                     <Text style={styles.approxText}>{equivalentDisplay}</Text>
                   )}
@@ -213,7 +210,6 @@ export default function WalletSettingsScreen() {
   );
 }
 
-// ─── STYLES ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E3F6FF' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 20 },
@@ -231,7 +227,7 @@ const styles = StyleSheet.create({
   rowLeft: { flexDirection: 'row', alignItems: 'center' },
   settingLabel: { fontFamily: 'Poppins_500Medium', fontSize: 16, color: '#1F2937', marginLeft: 12 },
   
-  // Styles mới cho Threshold Box
+  // Threshold Box
   thresholdContainer: { backgroundColor: '#F9FAFB', paddingHorizontal: 16, paddingVertical: 16, borderRadius: 16, marginTop: 16, borderWidth: 1, borderColor: '#E5E7EB' },
   thresholdHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   thresholdLabel: { fontFamily: 'Poppins_500Medium', fontSize: 14, color: '#4B5563' },

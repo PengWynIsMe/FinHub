@@ -29,17 +29,15 @@ export default function CreateSharedScreen() {
   // Dùng cho Split
   const [members, setMembers] = useState<any[]>([]); 
 
-  // 1. TỰ ĐỘNG LẤY DANH SÁCH THÀNH VIÊN NHÓM ĐỂ CHUẨN BỊ CHO CHẾ ĐỘ SPLIT
+  // LẤY DANH SÁCH THÀNH VIÊN NHÓM ĐỂ CHUẨN BỊ CHO CHẾ ĐỘ SPLIT
   useEffect(() => {
     const fetchGroupMembers = async () => {
       if (!groupId) return;
       try {
-        // Tận dụng API GetMyGroups để lọc ra nhóm hiện tại và lấy Members
         const res = await axiosClient.get('/Group');
         const currentGroup = res.data.find((g: any) => g.id === groupId);
         
         if (currentGroup && currentGroup.members) {
-          // Khởi tạo target = 0 cho tất cả thành viên
           const mappedMembers = currentGroup.members.map((m: any) => ({
             userId: m.id,
             name: m.name || m.fullName,
@@ -57,16 +55,13 @@ export default function CreateSharedScreen() {
     fetchGroupMembers();
   }, [groupId]);
 
-  // 2. XỬ LÝ KHI GÕ TIỀN CHO TỪNG THÀNH VIÊN (CHẾ ĐỘ SPLIT)
   const handleMemberTargetChange = (userId: string, text: string) => {
     const num = parseVND(text);
     setMembers(prev => prev.map(m => m.userId === userId ? { ...m, target: num } : m));
   };
 
-  // Tính tổng tiền nếu đang ở chế độ Split
   const totalSplitTarget = members.reduce((sum, m) => sum + m.target, 0);
 
-  // 3. GỬI DATA LÊN BACKEND ĐỂ TẠO GOAL
   const handleCreate = async () => {
     if (!name.trim()) {
       Alert.alert('Lỗi', 'Vui lòng nhập tên mục tiêu!');
@@ -124,7 +119,7 @@ export default function CreateSharedScreen() {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             
-            {/* ─── CARD 1: THÔNG TIN CƠ BẢN ─── */}
+            {/* ─── card info ─── */}
             <View style={styles.card}>
               <View style={styles.iconNameRow}>
                 <View style={styles.iconInputWrapper}>
@@ -132,29 +127,29 @@ export default function CreateSharedScreen() {
                     style={styles.iconInput}
                     value={icon}
                     onChangeText={setIcon}
-                    maxLength={2} // Chỉ cho nhập 1-2 emoji
+                    maxLength={2} 
                     placeholder="🎯"
                   />
                 </View>
                 <View style={{ flex: 1, marginLeft: 16 }}>
-                  <Text style={styles.inputLabel}>Tên quỹ mục tiêu</Text>
+                  <Text style={styles.inputLabel}>Name</Text>
                   <TextInput
                     style={styles.nameInput}
                     value={name}
                     onChangeText={setName}
-                    placeholder="Vd: Quỹ đi Đà Lạt..."
+                    placeholder="Ex: Go to Đà Lạt..."
                     placeholderTextColor="#9CA3AF"
                   />
                 </View>
               </View>
             </View>
 
-            {/* ─── CARD 2: CHỌN LOẠI QUỸ ─── */}
+            {/* ─── card quỹ ─── */}
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Hình thức góp quỹ</Text>
+              <Text style={styles.sectionTitle}>Choose your's method</Text>
               
               <View style={styles.typeContainer}>
-                {/* Option 1: Flexible */}
+                {/* Flexible */}
                 <TouchableOpacity 
                   style={[styles.typeBox, goalType === 'Flexible' && styles.typeBoxActive]}
                   onPress={() => setGoalType('Flexible')}
@@ -163,11 +158,11 @@ export default function CreateSharedScreen() {
                   <View style={[styles.radioCircle, goalType === 'Flexible' && styles.radioCircleActive]}>
                     {goalType === 'Flexible' && <View style={styles.radioDot} />}
                   </View>
-                  <Text style={[styles.typeTitle, goalType === 'Flexible' && styles.typeTitleActive]}>💸 Góp tùy tâm</Text>
-                  <Text style={styles.typeDesc}>Mọi người góp chung vào một quỹ tổng, không bắt buộc định mức cá nhân.</Text>
+                  <Text style={[styles.typeTitle, goalType === 'Flexible' && styles.typeTitleActive]}>💸 Flexible</Text>
+                  <Text style={styles.typeDesc}>Everyone contributes to a common fund, with no mandatory individual quota.</Text>
                 </TouchableOpacity>
 
-                {/* Option 2: Split */}
+                {/* Split */}
                 <TouchableOpacity 
                   style={[styles.typeBox, goalType === 'Split' && styles.typeBoxActive]}
                   onPress={() => setGoalType('Split')}
@@ -176,18 +171,16 @@ export default function CreateSharedScreen() {
                   <View style={[styles.radioCircle, goalType === 'Split' && styles.radioCircleActive]}>
                     {goalType === 'Split' && <View style={styles.radioDot} />}
                   </View>
-                  <Text style={[styles.typeTitle, goalType === 'Split' && styles.typeTitleActive]}>🎯 Chia định mức</Text>
-                  <Text style={styles.typeDesc}>Thiết lập số tiền cụ thể mà mỗi thành viên cần phải đóng góp.</Text>
+                  <Text style={[styles.typeTitle, goalType === 'Split' && styles.typeTitleActive]}>🎯 Divide the quota</Text>
+                  <Text style={styles.typeDesc}>Set the specific amount that each member needs to contribute.</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* ─── CARD 3: THIẾT LẬP SỐ TIỀN ─── */}
             <View style={styles.card}>
               {goalType === 'Flexible' ? (
-                // UI CHO FLEXIBLE MODE
                 <View>
-                  <Text style={styles.sectionTitle}>Tổng quỹ mục tiêu</Text>
+                  <Text style={styles.sectionTitle}>Total target fund</Text>
                   <View style={styles.bigInputWrapper}>
                     <TextInput
                       style={styles.bigInput}
@@ -201,7 +194,7 @@ export default function CreateSharedScreen() {
                   </View>
                 </View>
               ) : (
-                // UI CHO SPLIT MODE
+
                 <View>
                   <Text style={styles.sectionTitle}>Chia định mức thành viên</Text>
                   {isLoadingMembers ? (
@@ -225,7 +218,6 @@ export default function CreateSharedScreen() {
                         </View>
                       ))}
 
-                      {/* Hiển thị tự động tính tổng */}
                       <View style={styles.summaryRow}>
                         <Text style={styles.summaryLabel}>TỔNG CỘNG:</Text>
                         <Text style={styles.summaryValue}>{formatVND(totalSplitTarget)} VNĐ</Text>
@@ -244,7 +236,6 @@ export default function CreateSharedScreen() {
   );
 }
 
-// ─── STYLES ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 16, backgroundColor: '#FFFFFF' },

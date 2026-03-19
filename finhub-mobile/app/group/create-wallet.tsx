@@ -30,7 +30,6 @@ export default function CreateSharedWalletScreen() {
 
     setIsSaving(true);
     try {
-      // 💡 Gửi thêm allocatedAmount xuống Backend
       await axiosClient.post(`/Group/${groupId}/wallets`, {
         name: name.trim(),
         allocatedAmount: amount 
@@ -82,7 +81,7 @@ export default function CreateSharedWalletScreen() {
               </View>
             </View>
 
-            {/* 💡 Ô NHẬP HẠN MỨC (ALLOCATED AMOUNT) */}
+            {/* ALLOCATED AMOUNT */}
             <View style={styles.card}>
               <Text style={[styles.inputLabel, {marginBottom: 12}]}>Hạn mức cấp phép (Allocated)</Text>
               <View style={styles.amountInputWrapper}>
@@ -123,7 +122,6 @@ const styles = StyleSheet.create({
   inputLabel: { fontFamily: 'Poppins_500Medium', fontSize: 13, color: '#6B7280', marginBottom: 4 },
   nameInput: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: '#1F2937', padding: 0, borderBottomWidth: 1, borderBottomColor: '#E5E7EB', height: 36 },
   
-  // 💡 STYLES CHO Ô NHẬP HẠN MỨC
   amountInputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 16, paddingHorizontal: 16, height: 64, marginBottom: 12 },
   amountInput: { flex: 1, fontFamily: 'Poppins_600SemiBold', fontSize: 24, color: '#10B981', padding: 0 },
   currencySuffix: { fontFamily: 'Poppins_600SemiBold', fontSize: 18, color: '#9CA3AF', marginLeft: 8 },

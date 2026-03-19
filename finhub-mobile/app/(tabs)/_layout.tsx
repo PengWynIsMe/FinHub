@@ -33,7 +33,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
       <View style={styles.navDividerLeft} />
       <View style={styles.navDividerRight} />
 
-      {/* --- NÚT 1: WALLET (HOME) --- */}
+      {/* --- WALLET (HOME) --- */}
       <TouchableOpacity 
         style={styles.tabItem} 
         onPress={() => onTabPress('home')}
@@ -44,7 +44,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
         <Text style={isRouteActive('home') ? styles.labelActive : styles.label}>Wallet</Text>
       </TouchableOpacity>
 
-      {/* --- NÚT 2: GROUP --- */}
+      {/* --- GROUP --- */}
       <TouchableOpacity 
         style={styles.tabItem} 
         onPress={() => onTabPress('group')}
@@ -55,20 +55,16 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
         <Text style={isRouteActive('group') ? styles.labelActive : styles.label}>Group</Text>
       </TouchableOpacity>
 
-      {/* --- NÚT 3: VOICE (Nút giữa nổi lên) --- */}
-      {/* --- NÚT 3: VOICE / CREATE (Nút giữa) --- */}
+      {/* --- VOICE --- */}
       <TouchableOpacity
         style={styles.centerWrap}
         activeOpacity={0.9}
 
-        // 1. Tap → tạo transaction
         onPress={() => router.push('/transaction/create')}
 
-        // 2. Long press → mở voice modal
         onLongPress={() => {
-          // Nếu muốn rung:
-          // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          router.push('/modal/voice-input');
+        // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        router.push('/modal/voice-input');
         }}
 
         delayLongPress={1000}
@@ -80,7 +76,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
       </TouchableOpacity>
 
 
-      {/* --- NÚT 4: REPORT --- */}
+      {/* --- REPORT --- */}
       <TouchableOpacity 
         style={styles.tabItem} 
         onPress={() => onTabPress('report')}
@@ -91,7 +87,7 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
         <Text style={isRouteActive('report') ? styles.labelActive : styles.label}>Report</Text>
       </TouchableOpacity>
 
-      {/* --- NÚT 5: EXPLORE --- */}
+      {/* --- EXPLORE --- */}
       <TouchableOpacity 
         style={styles.tabItem} 
         onPress={() => onTabPress('explore')}
@@ -106,7 +102,6 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
   );
 };
 
-// 2. Main Layout Config
 export default function TabLayout() {
   return (
     <Tabs
@@ -125,7 +120,6 @@ export default function TabLayout() {
   );
 }
 
-// 3. Styles
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
@@ -175,12 +169,12 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     marginBottom: 4,
   },
-  dummyDot: { // View rỗng để giữ chỗ, tránh icon bị nhảy lên xuống
+  dummyDot: { 
     height: 6,
     marginBottom: 4,
   },
 
-  // Nút giữa (Floating)
+  // Nút giữa
   centerWrap: {
     alignItems: 'center',
     justifyContent: 'flex-end',

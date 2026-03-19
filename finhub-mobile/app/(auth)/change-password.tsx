@@ -18,9 +18,9 @@ import { router } from "expo-router";
 export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Tuỳ chọn ẩn/hiện mk
+  const [showPassword, setShowPassword] = useState(false); 
 
-  // Validate: Cả 2 ô đều phải có dữ liệu và phải trùng khớp nhau
+  // Validate
   const isFormValid =
     newPassword.length >= 6 && newPassword === confirmPassword;
 
@@ -89,7 +89,6 @@ export default function ChangePasswordScreen() {
               activeOpacity={0.8}
               onPress={() => {
                 console.log("Password changed successfully!");
-                // Điều hướng sang màn hình Success
                 router.push("/change-password-success");
               }}
             >

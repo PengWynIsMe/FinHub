@@ -11,7 +11,6 @@ import { useAuthStore } from '@/stores/auth.store';
 import axiosClient from '@/api/axiosClient';
 
 export default function HomeScreen() {
-  // Lấy thông tin user từ Zustand store
   const user = useAuthStore((state: any) => state.user);
   
   const [walletSummary, setWalletSummary] = useState({
@@ -38,7 +37,7 @@ export default function HomeScreen() {
 
   const handleAllocate = () => {
     router.push({
-      pathname: '/group/create-shared',
+      pathname: '/group/create-budget',
       params: { type: 'budget', action: 'create' }
     });
   };
@@ -76,18 +75,17 @@ export default function HomeScreen() {
     );
   };
 
-  // 💡 TỐI ƯU LOGIC HIỂN THỊ TÊN & AVATAR
-  // Ưu tiên lấy Name (hoặc Nickname/FullName tùy DB của bạn)
+  // Ưu tiên lấy Name 
   const displayName = user?.fullName || user?.nickname || user?.email?.split('@')[0] || 'Guest';
   
-  // Tự động tạo Avatar xịn xò từ chữ cái đầu của tên
+  // avatar từ name
   const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=15476C&color=fff&bold=true`;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Header Section */}
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.userRow}>
           <TouchableOpacity 
@@ -99,7 +97,7 @@ export default function HomeScreen() {
               source={{ uri: user?.avatarUrl || defaultAvatar }} 
               style={styles.avatar} 
             />
-            {/* 💡 SỬ DỤNG BIẾN displayName ĐÃ XỬ LÝ */}
+            {/* name */}
             <Text style={styles.greeting} numberOfLines={1}>
               Hi, {displayName}
             </Text>
@@ -127,7 +125,7 @@ export default function HomeScreen() {
         />
       </View>
 
-      {/* Body Section */}
+      {/* Body */}
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
         <Text style={styles.sectionTitle}>Mandatory fee</Text>

@@ -59,7 +59,7 @@ export default function QrPaymentScreen() {
       if (billInfo.amount > remainingMoney) {
         // 1A. Vượt quá hạn mức của Quỹ Nhóm
         buttonConfig = {
-          text: "Quỹ chung không đủ! Gửi yêu cầu xin vượt mức",
+          text: "Exceeded limit! Send the request",
           color: "#EF4444", // Hiện nút Đỏ cảnh báo nguy hiểm
           icon: "alert-octagon",
           actionType: "PayForMe" // Vẫn gửi Request, nhưng con đã nhận thức được là mình đang xin lố tiền
@@ -86,7 +86,7 @@ export default function QrPaymentScreen() {
       } else {
         // 2B. Ví cá nhân đủ tiền
         buttonConfig = {
-          text: "Tự thanh toán bằng Tiền mặt",
+          text: "Confirm by your balance",
           color: "#10B981", // Màu Xanh an toàn
           icon: "check-circle",
           actionType: "SelfPay"
@@ -143,7 +143,7 @@ export default function QrPaymentScreen() {
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
           <Feather name="x" size={28} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Xác nhận thanh toán</Text>
+        <Text style={styles.headerTitle}>Confirm payment</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -160,17 +160,17 @@ export default function QrPaymentScreen() {
           <View style={styles.dashedLine} />
           
           <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Mã hóa đơn</Text>
+            <Text style={styles.billLabel}>Invoice code</Text>
             <Text style={styles.billValue}>#QR-982374</Text>
           </View>
           <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Thời gian</Text>
-            <Text style={styles.billValue}>Hôm nay, 14:30</Text>
+            <Text style={styles.billLabel}>Time</Text>
+            <Text style={styles.billValue}>Today, 14:30</Text>
           </View>
         </View>
 
         {/* CHỌN NGUỒN TIỀN */}
-        <Text style={styles.sectionTitle}>Chọn nguồn tiền ảo để trừ</Text>
+        <Text style={styles.sectionTitle}>Select the source of funds to deduct</Text>
         
         {isLoading ? (
           <ActivityIndicator size="large" color="#15476C" style={{ marginTop: 20 }} />
@@ -193,12 +193,19 @@ export default function QrPaymentScreen() {
                   activeOpacity={0.9}
                 >
                   <View style={styles.walletHeader}>
-                    {/* Hộp chứa Icon */}
+                    {/* 💡 SỬA LẠI HỘP CHỨA ICON Ở ĐÂY */}
                     <View style={[styles.walletIconBox, isSelected && styles.walletIconBoxActive]}>
-                      <Text style={{fontSize: 22}}>{b.icon || '💼'}</Text>
+                      {b.icon && b.icon.startsWith('http') ? (
+                        <Image 
+                          source={{ uri: b.icon }} 
+                          style={{ width: '100%', height: '100%', borderRadius: 16 }} 
+                        />
+                      ) : (
+                        <Text style={{fontSize: 22}}>{b.icon || '💼'}</Text>
+                      )}
                     </View>
 
-                    {/* Các Badge góc phải (Nhóm & Tick chọn) */}
+                    {/* Các Badge góc phải (Nhóm & Tick chọn) giữ nguyên */}
                     <View style={{ flexDirection: 'row', gap: 6 }}>
                       {b.isGroupWallet && (
                         <View style={styles.groupBadge}>
@@ -220,7 +227,7 @@ export default function QrPaymentScreen() {
                     {b.name}
                   </Text>
                   <Text style={[styles.walletBalance, bRemaining < billInfo.amount && {color: '#FF4267'}]}>
-                    Dư: {formatVND(bRemaining)}đ
+                    Re: {formatVND(bRemaining)}đ
                   </Text>
                 </TouchableOpacity>
               )

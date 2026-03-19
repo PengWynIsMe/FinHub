@@ -18,11 +18,8 @@ import { router } from "expo-router";
 export default function VerifyOtpScreen() {
   const [code, setCode] = useState("");
 
-  // Nút Change Password chỉ sáng lên khi đã nhập đủ mã (ví dụ mã 4 số)
   const isFormValid = code.trim().length >= 4;
 
-  // Trong thực tế, số điện thoại này sẽ được truyền qua từ trang trước
-  // thông qua router params hoặc state management (Zustand).
   const maskedPhoneNumber = "(+84) 0398829xxx"; 
 
   return (
@@ -63,8 +60,8 @@ export default function VerifyOtpScreen() {
                 placeholderTextColor="#CACACA"
                 value={code}
                 onChangeText={setCode}
-                keyboardType="number-pad" // Bàn phím số cho việc nhập mã
-                maxLength={6} // Thường OTP dài 4-6 số
+                keyboardType="number-pad" 
+                maxLength={6} 
                 autoFocus={true}
               />
               <TouchableOpacity style={styles.btnResend} activeOpacity={0.8}>
@@ -92,8 +89,6 @@ export default function VerifyOtpScreen() {
               activeOpacity={0.8}
               onPress={() => {
                 console.log("Verify code and proceed:", code);
-                // Tại đây, sau khi xác thực OTP thành công, 
-                // bạn có thể điều hướng user sang trang đặt mật khẩu mới 
                 router.push("/change-password");
               }}
             >
@@ -113,7 +108,6 @@ export default function VerifyOtpScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -156,11 +150,11 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12, // Tạo khoảng cách giữa ô nhập và nút Resend
+    gap: 12, 
     marginBottom: 24,
   },
   input: {
-    flex: 1, // Chiếm toàn bộ không gian còn lại
+    flex: 1,
     height: 52,
     borderWidth: 1.5,
     borderColor: "#E5E5E5",
@@ -188,13 +182,13 @@ const styles = StyleSheet.create({
   helperText: {
     fontFamily: "Poppins_500Medium",
     fontSize: 14,
-    color: "#888888", // Màu xám trung tính
+    color: "#888888", 
     lineHeight: 22,
     marginBottom: 16,
     paddingHorizontal: 4,
   },
   highlightText: {
-    color: "#4A47A3", // Màu tím/navy nhạt như trong thiết kế cho SĐT
+    color: "#4A47A3", 
     fontFamily: "Poppins_600SemiBold",
   },
   subHelperText: {

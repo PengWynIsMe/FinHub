@@ -55,8 +55,8 @@ public partial class FinhubDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         var balanceConverter = new ValueConverter<decimal, string>(
-            v => EncryptionHelper.EncryptDecimal(v),     // Khi ghi vào DB (Encrypt)
-            v => EncryptionHelper.DecryptToDecimal(v)    // Khi đọc từ DB (Decrypt)
+            v => EncryptionHelper.EncryptDecimal(v),    
+            v => EncryptionHelper.DecryptToDecimal(v)   
         );
 
         modelBuilder.Entity<AccountPermission>(entity =>

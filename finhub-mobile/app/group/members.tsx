@@ -8,12 +8,11 @@ import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard'; 
 import axiosClient from '@/api/axiosClient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import QRCode from 'react-native-qrcode-svg'; // 💡 IMPORT THƯ VIỆN QR
+import QRCode from 'react-native-qrcode-svg';
 
 export default function MemberManagementScreen() {
   const router = useRouter();
   
-  // Hứng id của nhóm từ màn hình trước truyền sang
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [members, setMembers] = useState<any[]>([]);
@@ -34,7 +33,6 @@ export default function MemberManagementScreen() {
   const [selectedMember, setSelectedMember] = useState<any>(null);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
 
-  // 💡 LẤY DỮ LIỆU THẬT TỪ API
   const fetchMembers = async () => {
     if (!id) {
       setIsLoading(false);
@@ -49,7 +47,7 @@ export default function MemberManagementScreen() {
         inviteCode: res.data.inviteCode
       });
       setMembers(res.data.members);
-      // Lấy role của user hiện tại từ API (nếu backend trả về)
+      // Lấy role của user
       setMyRole(res.data.myRole ?? 'Member');
     } catch (error) {
       console.error("Lỗi lấy thành viên:", error);
@@ -66,7 +64,6 @@ export default function MemberManagementScreen() {
     }, [id])
   );
 
-  // 💡 HÀM COPY MÃ MỜI
   const handleCopyCode = async () => {
     if (groupInfo.inviteCode) {
       await Clipboard.setStringAsync(groupInfo.inviteCode);
@@ -95,7 +92,7 @@ export default function MemberManagementScreen() {
     );
   }
 
-  // 💡 DATA NHÚNG VÀO MÃ QR ĐỂ APP HIỂU ĐÂY LÀ LỜI MỜI VÀO NHÓM
+  // Qr nhóm
   const inviteQrData = JSON.stringify({
     action: 'join_group',
     groupId: id,
@@ -124,7 +121,7 @@ export default function MemberManagementScreen() {
           <Text style={styles.groupName}>{groupInfo.name || 'Group Name'}</Text>
         </View>
 
-        {/* ─── NÚT ADD MEMBER (Mở Modal xem Code & QR) ─── */}
+        {/* ───ADD MEMBER─── */}
         <TouchableOpacity 
           style={styles.addCard} 
           activeOpacity={0.8}
@@ -136,7 +133,6 @@ export default function MemberManagementScreen() {
           <Text style={{marginTop: 12, fontFamily: 'Poppins_500Medium', color: '#6B7280'}}>Invite Members</Text>
         </TouchableOpacity>
 
-        {/* ─── Danh sách thành viên ─── */}
         {members.map((member) => (
           <View key={member.id} style={styles.memberCard}>
             <Image source={{ uri: member.avatar }} style={styles.avatarImg} />
@@ -176,7 +172,6 @@ export default function MemberManagementScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* ─── MODAL: HIỂN THỊ MÃ MỜI VÀ QR CODE ─── */}
       <Modal
         visible={isAddModalVisible}
         transparent={true}
@@ -197,7 +192,6 @@ export default function MemberManagementScreen() {
               Quét mã QR hoặc chia sẻ mã Code này để mời bạn bè tham gia nhóm của bạn.
             </Text>
 
-            {/* 💡 VÙNG VẼ QR CODE */}
             {groupInfo.inviteCode ? (
               <View style={styles.qrCodeWrapper}>
                 <QRCode
@@ -213,7 +207,6 @@ export default function MemberManagementScreen() {
               </View>
             ) : null}
 
-            {/* 💡 Ô Hiển thị Mã Text để Copy (Dự phòng) */}
             <TouchableOpacity 
                 style={styles.codeContainer} 
                 activeOpacity={0.7} 
@@ -235,7 +228,6 @@ export default function MemberManagementScreen() {
         </View>
       </Modal>
 
-      {/* ─── MODAL XÁC NHẬN XÓA THÀNH VIÊN ─── */}
       {showRemoveModal && (
         <View style={styles.removeModalOverlay}>
           <View style={styles.removeModalBox}>
@@ -262,7 +254,6 @@ export default function MemberManagementScreen() {
   );
 }
 
-// ─── STYLES (Cập nhật để hiển thị QR Code đẹp hơn) ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E3F6FF' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 20 },
@@ -290,8 +281,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontFamily: 'Poppins_600SemiBold', fontSize: 20, color: '#1F2937' },
   closeModalBtn: { padding: 4 },
   modalSubtitle: { fontFamily: 'Poppins_400Regular', fontSize: 14, color: '#6B7280', marginBottom: 20, textAlign: 'center' },
-  
-  // 💡 STYLE CHO BỌC QR CODE
+
   qrCodeWrapper: { alignSelf: 'center', padding: 16, backgroundColor: '#FFF', borderRadius: 20, borderWidth: 1, borderColor: '#E5E7EB', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, shadowOffset: {width: 0, height: 4}, marginBottom: 20 },
 
   codeContainer: { flexDirection: 'row', backgroundColor: '#F9FAFB', padding: 16, borderRadius: 16, alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, borderWidth: 1, borderColor: '#E5E7EB', borderStyle: 'dashed' },

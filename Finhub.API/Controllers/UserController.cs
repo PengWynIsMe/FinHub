@@ -9,7 +9,7 @@ namespace Finhub.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Yêu cầu phải có Token hợp lệ
+    [Authorize] 
     public class UserController : ControllerBase
     {
         private readonly FinhubDbContext _context;
@@ -22,7 +22,7 @@ namespace Finhub.API.Controllers
         [HttpGet("me")]
         public async Task<IActionResult> GetMyProfile()
         {
-            // Lấy ID từ Subject (Sub) trong Claim của Token
+            // Lấy ID trong Token
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             {
@@ -61,7 +61,6 @@ namespace Finhub.API.Controllers
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null) return NotFound("User not found.");
 
-            // ✅ Chỉ cập nhật các field được phép sửa
             if (!string.IsNullOrWhiteSpace(request.FullName))
                 user.FullName = request.FullName;
 

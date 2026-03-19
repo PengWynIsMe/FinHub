@@ -31,7 +31,7 @@ namespace Finhub.API.Controllers
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
-            // 1. Tìm ví (kèm Group để check quyền)
+            // 1. Tìm ví + group check quyền
             var wallet = await _context.Wallets
                 .Include(w => w.Group).ThenInclude(g => g.GroupMembers)
                 .FirstOrDefaultAsync(w => w.WalletId == request.WalletId);
@@ -44,26 +44,25 @@ namespace Finhub.API.Controllers
 
             if (!hasAccess) return BadRequest(new { Message = "Bạn không có quyền tạo giao dịch trên ví này!" });
 
-            // 2. 💡 SMART APPROVAL WORKFLOW: Kiểm tra giới hạn chi tiêu (Chỉ áp dụng cho Expense)
+            // 2. check limit
             bool isPending = false;
 
             if (request.Type.Equals("Expense", StringComparison.OrdinalIgnoreCase))
             {
-                // Tìm xem User này có bị giới hạn (Permission) trên ví này không
                 var permission = await _context.AccountPermissions
                     .FirstOrDefaultAsync(p => p.WalletId == request.WalletId && p.GranteeUserId == userId);
 
-                // Nếu có luật giới hạn VÀ số tiền vượt mức
+                // nếu có quyền
                 if (permission != null && permission.RequireRequestForOverLimit)
                 {
                     if (permission.MaxAmountPerTransaction.HasValue && request.Amount > permission.MaxAmountPerTransaction.Value)
                     {
-                        isPending = true; // Bật cờ chờ duyệt!
+                        isPending = true;
                     }
                 }
             }
 
-            // 3. Trừ/Cộng tiền trực tiếp vào số dư của Ví (NẾU KHÔNG BỊ PENDING)
+            // 3. Trừ/Cộng tiền trực tiếp vào số dư của Ví (KHÔNG PENDING)
             if (!isPending)
             {
                 if (request.Type.Equals("Expense", StringComparison.OrdinalIgnoreCase))
@@ -85,16 +84,15 @@ namespace Finhub.API.Controllers
                 Note = request.Note,
                 Evaluation = request.Evaluation,
                 TransactionDate = DateTime.UtcNow,
-                Status = isPending ? "Pending" : "Completed", // 💡 Nếu vượt mức thì trạng thái là Pending
+                Status = isPending ? "Pending" : "Completed", // vượt thì pending
                 CreatedAt = DateTime.UtcNow
             };
             _context.Transactions.Add(newTransaction);
 
-            // 5. 💡 NẾU PENDING: Tạo thông báo gửi cho Chủ ví (Admin)
-            // 5. 💡 NẾU PENDING: Tạo thông báo gửi cho Chủ nhóm (Admin) hoặc Chủ ví
+            // 5. pending => báo chủ ví
             if (isPending)
             {
-                // 💡 FIX LỖI ÉP KIỂU & LOGIC: Nếu là ví nhóm -> Gửi cho Chủ nhóm. Nếu ví cá nhân -> Gửi cho Chủ ví.
+                //  Nếu là ví nhóm -> Gửi cho Chủ nhóm. Nếu ví cá nhân -> Gửi cho Chủ ví.
                 Guid recipientId = wallet.GroupId != null && wallet.Group != null
                                    ? wallet.Group.OwnerId
                                    : (wallet.OwnerUserId ?? Guid.Empty);
@@ -102,9 +100,9 @@ namespace Finhub.API.Controllers
                 var notification = new Notification
                 {
                     NotificationId = Guid.NewGuid(),
-                    RecipientUserId = recipientId, // Đã hết bị lỗi đỏ!
-                    SenderUserId = userId,                // Người xin phép
-                    RelatedEntityId = newTransaction.TransactionId, // Gắn ID giao dịch vào đây
+                    RecipientUserId = recipientId, 
+                    SenderUserId = userId,                
+                    RelatedEntityId = newTransaction.TransactionId,
                     EntityType = "ExpenseRequest",
                     Title = "Yêu cầu chi tiêu",
                     Message = $"Yêu cầu chi tiêu {request.Amount:N0} VNĐ vượt quá hạn mức cho phép.",
@@ -126,7 +124,6 @@ namespace Finhub.API.Controllers
         }
     }
 
-    // DTO Hứng dữ liệu từ React Native gửi lên
     public class CreateTransactionRequest
     {
         public Guid WalletId { get; set; }

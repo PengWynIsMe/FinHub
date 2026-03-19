@@ -15,11 +15,10 @@ export default function SavingDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
 
-  // ─── STATE QUẢN LÝ DỮ LIỆU ───
   const [goal, setGoal] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ─── STATE CHO CÁC MODAL & ACTION ───
+  // ─── MODAL & ACTION ───
   const [isEditModalVisible, setEditModalVisible] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editTotalTarget, setEditTotalTarget] = useState('0');
@@ -31,10 +30,10 @@ export default function SavingDetailScreen() {
   const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
   const [isContributing, setIsContributing] = useState(false);
   
-  // State cho lúc bấm End Goal
+  // End Goal
   const [isEndingGoal, setIsEndingGoal] = useState(false);
 
-  // 1. FETCH DỮ LIỆU TỪ BACKEND
+  // BACKEND
   const fetchGoalDetail = async () => {
     try {
       const res = await axiosClient.get(`/Goal/${id}`);
@@ -69,7 +68,7 @@ export default function SavingDetailScreen() {
     }, [id])
   );
 
-  // 2. XỬ LÝ KẾT THÚC MỤC TIÊU (END GOAL)
+  // END GOAL
   const handleEndGoal = () => {
     Alert.alert(
       "Kết thúc Mục tiêu 🎯",
@@ -84,10 +83,9 @@ export default function SavingDetailScreen() {
             try {
               const res = await axiosClient.post(`/Goal/${id}/end`);
               Alert.alert('Tuyệt vời 🎉', 'Đã chuyển quỹ thành công! Bạn có thể xem ví mới ở trang Shared Wallet.');
-              fetchGoalDetail(); // Tải lại dữ liệu để UI cập nhật trạng thái "Completed"
+              fetchGoalDetail(); 
             } catch (error: any) {
               console.error('Lỗi end goal:', error);
-              // Backend sẽ trả về lỗi 403 nếu người bấm không phải Admin
               Alert.alert('Lỗi', error.response?.data?.Message || 'Không thể kết thúc quỹ lúc này.');
             } finally {
               setIsEndingGoal(false);
@@ -98,7 +96,7 @@ export default function SavingDetailScreen() {
     );
   };
 
-  // 3. XỬ LÝ CHỈNH SỬA ĐỊNH MỨC
+  // CHỈNH SỬA ĐỊNH MỨC
   const openEditModal = () => {
     if (!goal) return;
     setEditTotalTarget(goal.totalTarget.toString());
@@ -132,7 +130,7 @@ export default function SavingDetailScreen() {
     }
   };
 
-  // 4. XỬ LÝ NỘP TIỀN
+  //  NỘP TIỀN
   const handleContribute = async () => {
     const amount = parseVND(contributeAmount);
     if (amount <= 0) {
@@ -172,7 +170,7 @@ export default function SavingDetailScreen() {
   }
 
   const totalProgress = goal.totalTarget > 0 ? Math.min((goal.totalSaved / goal.totalTarget) * 100, 100) : 0;
-  const isCompleted = goal.status === 'Completed'; // Cờ kiểm tra trạng thái hoàn thành
+  const isCompleted = goal.status === 'Completed'; 
 
   const renderMemberProgress = (member: any) => {
     const targetAmt = goal.goalType === 'Split' ? member.target : goal.totalTarget;
@@ -208,14 +206,13 @@ export default function SavingDetailScreen() {
           <Feather name="chevron-left" size={28} color="#1F2937" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Goal Detail</Text>
-        
-        {/* 💡 Chỉ hiện nút Cài đặt (Răng cưa) nếu quỹ đang Active */}
+
         {!isCompleted ? (
           <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
             <Feather name="settings" size={24} color="#1F2937" />
           </TouchableOpacity>
         ) : (
-          <View style={{ width: 32 }} /> // Giữ bố cục cân đối
+          <View style={{ width: 32 }} /> 
         )}
       </View>
 
@@ -229,7 +226,7 @@ export default function SavingDetailScreen() {
           <Text style={styles.goalName}>{goal.name}</Text>
           <View style={styles.badgeType}>
             <Text style={styles.badgeTypeText}>
-              {goal.goalType === 'Split' ? '🎯 Định mức cá nhân' : '💸 Góp tùy tâm'}
+              {goal.goalType === 'Split' ? '🎯' : '💸'}
             </Text>
           </View>
           
@@ -246,15 +243,15 @@ export default function SavingDetailScreen() {
           </Text>
         </View>
 
-        {/* 💡 ĐIỀU CHỈNH UI THEO TRẠNG THÁI (STATUS) */}
+        {/* UI THEO STATUS */}
         {isCompleted ? (
-          // NẾU ĐÃ KẾT THÚC: Hiện Badge Hoàn thành
+          // ĐÃ KẾT THÚC
           <View style={styles.completedBadge}>
             <Feather name="check-circle" size={24} color="#10B981" />
             <Text style={styles.completedBadgeText}>Quỹ mục tiêu này đã kết thúc</Text>
           </View>
         ) : (
-          // NẾU ĐANG CHẠY: Hiện 2 nút Đóng góp & Kết thúc
+          // ĐANG CHẠY
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity 
               style={[styles.btnContribute, { flex: 2 }]} 
@@ -262,7 +259,7 @@ export default function SavingDetailScreen() {
               onPress={() => setContributeModalVisible(true)}
             >
               <Ionicons name="wallet-outline" size={20} color="#FFFFFF" style={{marginRight: 8}} />
-              <Text style={styles.btnContributeText}>Đóng góp</Text>
+              <Text style={styles.btnContributeText}>Add saving</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
@@ -274,7 +271,7 @@ export default function SavingDetailScreen() {
               {isEndingGoal ? <ActivityIndicator color="#FF4267" /> : (
                 <>
                   <Feather name="flag" size={18} color="#FF4267" style={{marginRight: 4}} />
-                  <Text style={styles.btnEndGoalText}>Kết thúc</Text>
+                  <Text style={styles.btnEndGoalText}>End</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -284,7 +281,7 @@ export default function SavingDetailScreen() {
         {/* TIẾN ĐỘ THÀNH VIÊN */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {goal.goalType === 'Split' ? 'Tiến độ từng người' : 'Thành viên đóng góp'}
+            {goal.goalType === 'Split' ? 'Each persons progress' : 'Contributing member'}
           </Text>
         </View>
         <View style={styles.membersListContainer}>
@@ -294,14 +291,14 @@ export default function SavingDetailScreen() {
         <View style={{ height: 60 }} />
       </ScrollView>
 
-      {/* ─── MODAL 1: CHỈNH SỬA ĐỊNH MỨC (GIỮ NGUYÊN) ─── */}
+      {/* ─── MODAL : CHỈNH SỬA ĐỊNH MỨC ─── */}
       <Modal visible={isEditModalVisible} transparent={true} animationType="slide" onRequestClose={() => setEditModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
                 <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Điều chỉnh định mức</Text>
+                  <Text style={styles.modalTitle}>Change saving limit</Text>
                   <TouchableOpacity onPress={() => setEditModalVisible(false)} style={styles.closeModalBtn}>
                     <Feather name="x" size={24} color="#9CA3AF" />
                   </TouchableOpacity>
@@ -318,7 +315,7 @@ export default function SavingDetailScreen() {
                     </View>
                   ) : (
                     <>
-                      <Text style={styles.helperText}>Thay đổi số tiền mà mỗi thành viên cần đóng góp.</Text>
+                      <Text style={styles.helperText}>Change the amount of money that each member needs to contribute.</Text>
                       {editMembers.map((m) => (
                         <View key={m.id} style={styles.editRow}>
                           <View style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
@@ -332,7 +329,7 @@ export default function SavingDetailScreen() {
                         </View>
                       ))}
                       <View style={styles.summaryRow}>
-                        <Text style={styles.summaryLabel}>TỔNG QUỸ MỚI:</Text>
+                        <Text style={styles.summaryLabel}>NEW TOTAL FUND:</Text>
                         <Text style={styles.summaryValue}>{formatVND(parseInt(editTotalTarget))} VNĐ</Text>
                       </View>
                     </>
@@ -340,7 +337,7 @@ export default function SavingDetailScreen() {
                 </ScrollView>
 
                 <TouchableOpacity style={[styles.btnSave, isSaving && {opacity: 0.7}]} onPress={handleSaveSettings} disabled={isSaving}>
-                  {isSaving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnSaveText}>Lưu thay đổi</Text>}
+                  {isSaving ? <ActivityIndicator color="#FFF" /> : <Text style={styles.btnSaveText}>Save</Text>}
                 </TouchableOpacity>
               </View>
             </View>
@@ -348,7 +345,7 @@ export default function SavingDetailScreen() {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* ─── MODAL 2: ĐÓNG GÓP TIỀN (GIỮ NGUYÊN) ─── */}
+      {/* ─── MODAL: ĐÓNG GÓP TIỀN─── */}
       <Modal visible={isContributeModalVisible} transparent={true} animationType="fade" onRequestClose={() => setContributeModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -396,7 +393,6 @@ export default function SavingDetailScreen() {
   );
 }
 
-// ─── STYLES BỔ SUNG THÊM NÚT END GOAL VÀ BADGE HOÀN THÀNH ───
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingTop: Platform.OS === 'android' ? 40 : 10, paddingBottom: 16, backgroundColor: '#FFFFFF' },

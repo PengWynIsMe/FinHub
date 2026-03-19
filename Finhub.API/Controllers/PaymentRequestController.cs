@@ -25,26 +25,23 @@ namespace Finhub.API.Controllers
             return userId;
         }
 
-        // ─── CLASS DTO ĐÃ UPDATE: CHỈ CẦN TRUYỀN WALLET ID ───
         public class CreatePaymentReqDto
         {
-            public Guid WalletId { get; set; } // Thay thế GroupId và ApproverId
+            public Guid WalletId { get; set; }
             public decimal Amount { get; set; }
             public string? MerchantInfo { get; set; }
             public string? Note { get; set; }
             public string RequestType { get; set; } = "PayForMe";
         }
 
-        // ==========================================================
-        // 1. API TẠO YÊU CẦU THANH TOÁN (MÁY CON GỌI)
-        // ==========================================================
+        // 1. Tạo request
         [HttpPost]
         public async Task<IActionResult> CreateRequest([FromBody] CreatePaymentReqDto request)
         {
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
-            // 1. Tìm Ví mà Đứa con muốn dùng để thanh toán
+            // 1. list ví
             var wallet = await _context.Wallets
                 .Include(w => w.Group)
                 .FirstOrDefaultAsync(w => w.WalletId == request.WalletId);
@@ -62,9 +59,9 @@ namespace Finhub.API.Controllers
             var newReq = new PaymentRequest
             {
                 RequestId = Guid.NewGuid(),
-                GroupId = wallet.GroupId.Value, // Tự động lấy GroupId từ Ví
+                GroupId = wallet.GroupId.Value, 
                 RequesterId = userId,
-                ApproverId = approverId,        // Tự động chuyển cho Admin
+                ApproverId = approverId,    
                 Amount = request.Amount,
                 MerchantInfo = request.MerchantInfo,
                 Note = request.Note,
@@ -83,9 +80,7 @@ namespace Finhub.API.Controllers
             });
         }
 
-        // ==========================================================
-        // 2. LẤY DANH SÁCH YÊU CẦU ĐANG CHỜ DUYỆT (DÀNH CHO BỐ/MẸ)
-        // ==========================================================
+        // 2. list pending
         [HttpGet("pending")]
         public async Task<IActionResult> GetPendingRequests()
         {
@@ -113,9 +108,7 @@ namespace Finhub.API.Controllers
             return Ok(requests);
         }
 
-        // ==========================================================
-        // 3. BỐ/MẸ XÁC NHẬN ĐÃ THANH TOÁN (DUYỆT)
-        // ==========================================================
+        // 3. Approve
         [HttpPut("{id}/approve")]
         public async Task<IActionResult> ApproveRequest(Guid id)
         {
@@ -129,23 +122,22 @@ namespace Finhub.API.Controllers
                 if (req == null || req.Status != "Pending")
                     return BadRequest(new { Message = "Yêu cầu không hợp lệ hoặc đã được xử lý." });
 
-                // 1. Cập nhật trạng thái
                 req.Status = "Paid";
                 req.UpdatedAt = DateTime.UtcNow;
 
-                // 2. Trừ tiền ảo trong Quỹ Nhóm (Shared Wallet)
+                // Trừ tiền ảo trong quỹ
                 var groupWallet = await _context.Wallets.FirstOrDefaultAsync(w => w.GroupId == req.GroupId && !w.IsArchived);
 
                 if (groupWallet != null)
                 {
                     groupWallet.CurrentBalance -= req.Amount;
 
-                    // Ghi lại lịch sử giao dịch (Transaction)
+                    // Ghi lại giao dịch
                     _context.Transactions.Add(new Transaction
                     {
                         TransactionId = Guid.NewGuid(),
                         WalletId = groupWallet.WalletId,
-                        UserId = req.RequesterId, // Ghi nhận là đứa con đã tiêu
+                        UserId = req.RequesterId,
                         Amount = req.Amount,
                         Type = "Expense",
                         Note = req.Note ?? "Thanh toán QR hộ thành viên",
@@ -166,9 +158,7 @@ namespace Finhub.API.Controllers
             }
         }
 
-        // ==========================================================
-        // 4. BỐ/MẸ TỪ CHỐI YÊU CẦU
-        // ==========================================================
+        // 4. Reject
         [HttpDelete("{id}/reject")]
         public async Task<IActionResult> RejectRequest(Guid id)
         {

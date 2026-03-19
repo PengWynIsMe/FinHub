@@ -15,21 +15,19 @@ namespace Finhub.API.Controllers
             _context = context;
         }
 
-        // 1. API Tạo nhanh 15 danh mục chuẩn
+        // 1.Seed data
         [HttpPost("seed-defaults")]
         public async Task<IActionResult> SeedDefaultCategories()
         {
-            // Kiểm tra xem đã có danh mục nào chưa, có rồi thì bỏ qua để khỏi bị tạo đúp
             var count = await _context.Categories.CountAsync();
             if (count > 0)
             {
                 return BadRequest(new { Message = $"Đã có {count} danh mục trong Database. Bỏ qua seed." });
             }
 
-            // Danh sách 15 Danh mục cơ bản dùng Icon của Feather
             var defaultCategories = new List<Category>
             {
-                // ==== EXPENSE (CHI TIÊU) ====
+                // EXPENSE
                 new Category { CategoryId = Guid.NewGuid(), Name = "Ăn uống", Type = "Expense", Icon = "coffee" },
                 new Category { CategoryId = Guid.NewGuid(), Name = "Đi chợ / Siêu thị", Type = "Expense", Icon = "shopping-cart" },
                 new Category { CategoryId = Guid.NewGuid(), Name = "Di chuyển", Type = "Expense", Icon = "navigation" },
@@ -43,7 +41,7 @@ namespace Finhub.API.Controllers
                 new Category { CategoryId = Guid.NewGuid(), Name = "Thú cưng", Type = "Expense", Icon = "github" },
                 new Category { CategoryId = Guid.NewGuid(), Name = "Hóa đơn / Phí", Type = "Expense", Icon = "file-text" },
 
-                // ==== INCOME (THU NHẬP) ====
+                // INCOME
                 new Category { CategoryId = Guid.NewGuid(), Name = "Lương", Type = "Income", Icon = "dollar-sign" },
                 new Category { CategoryId = Guid.NewGuid(), Name = "Đầu tư", Type = "Income", Icon = "trending-up" },
                 new Category { CategoryId = Guid.NewGuid(), Name = "Thu nhập khác", Type = "Income", Icon = "plus-circle" }
@@ -55,7 +53,7 @@ namespace Finhub.API.Controllers
             return Ok(new { Message = "Đã khởi tạo 15 danh mục mặc định thành công!" });
         }
 
-        // 2. API Lấy danh sách danh mục (Để lát nữa Mobile App gọi lên)
+        // 2. Lấy danh sách danh mục
         [HttpGet]
         public async Task<IActionResult> GetAllCategories()
         {
@@ -67,8 +65,8 @@ namespace Finhub.API.Controllers
                     c.Type,
                     c.Icon
                 })
-                .OrderBy(c => c.Type) // Sắp xếp theo Thu/Chi
-                .ThenBy(c => c.Name)  // Sắp xếp theo tên
+                .OrderBy(c => c.Type) 
+                .ThenBy(c => c.Name)
                 .ToListAsync();
 
             return Ok(categories);

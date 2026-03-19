@@ -18,9 +18,9 @@ import { Feather } from '@expo/vector-icons';
 import axiosClient from '@/api/axiosClient';
 
 const ACCOUNT_TYPES = [
-  { id: 'Bank', name: 'Ngân hàng', icon: '🏦', color: '#10B981' },
-  { id: 'Cash', name: 'Tiền mặt', icon: '💵', color: '#F59E0B' },
-  { id: 'EWallet', name: 'Ví điện tử', icon: '📱', color: '#EC4899' },
+  { id: 'Bank', name: 'Bank', icon: '🏦', color: '#10B981' },
+  { id: 'Cash', name: 'Cash', icon: '💵', color: '#F59E0B' },
+  { id: 'EWallet', name: 'E-Wallet', icon: '📱', color: '#EC4899' },
 ];
 
 export default function AddAccountScreen() {
@@ -62,7 +62,7 @@ export default function AddAccountScreen() {
         InitialBalance: rawBalance,
       });
 
-      Alert.alert('Thành công', 'Đã thêm tài khoản mới!', [
+      Alert.alert('Success', 'New wallet added!', [
         {
           text: 'OK',
           onPress: () => router.back(),
@@ -86,7 +86,7 @@ export default function AddAccountScreen() {
           <Feather name="chevron-left" size={28} color="#1F2937" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>Add New Account</Text>
+        <Text style={styles.headerTitle}>Add New Wallet</Text>
 
         <View style={{ width: 36 }} />
       </View>
@@ -100,7 +100,7 @@ export default function AddAccountScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Account Name</Text>
+            <Text style={styles.label}>Wallet Name</Text>
             <View style={styles.inputWrapper}>
               <Feather
                 name="edit-3"
@@ -184,7 +184,7 @@ export default function AddAccountScreen() {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.saveButtonText}>Create Account</Text>
+              <Text style={styles.saveButtonText}>Create Wallet</Text>
             )}
           </TouchableOpacity>
         </View>

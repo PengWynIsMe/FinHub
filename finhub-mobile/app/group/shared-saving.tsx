@@ -17,8 +17,7 @@ export default function SharedSavingScreen() {
   const [goals, setGoals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  
-  // 💡 1. THÊM STATE QUẢN LÝ TABS
+
   const [activeTab, setActiveTab] = useState<'active' | 'history'>('active');
 
   useFocusEffect(
@@ -47,11 +46,9 @@ export default function SharedSavingScreen() {
     }, [groupId])
   );
 
-  // 💡 2. FILTER DANH SÁCH THEO TRẠNG THÁI
   const activeGoals = goals.filter(g => g.status !== 'Completed');
   const historyGoals = goals.filter(g => g.status === 'Completed');
-  
-  // Danh sách hiện tại đang được chọn để hiển thị
+
   const displayGoals = activeTab === 'active' ? activeGoals : historyGoals;
 
   return (
@@ -69,13 +66,13 @@ export default function SharedSavingScreen() {
           style={[styles.tabButton, activeTab === 'active' && styles.activeTabButton]}
           onPress={() => setActiveTab('active')}
         >
-          <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>Đang thực hiện</Text>
+          <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>Processing</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={[styles.tabButton, activeTab === 'history' && styles.activeTabButton]}
           onPress={() => setActiveTab('history')}
         >
-          <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>Lịch sử</Text>
+          <Text style={[styles.tabText, activeTab === 'history' && styles.activeTabText]}>History</Text>
         </TouchableOpacity>
       </View>
 
@@ -86,7 +83,6 @@ export default function SharedSavingScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
-          {/* Nút Tạo quỹ mới CHỈ HIỆN ở Tab Đang thực hiện */}
           {activeTab === 'active' && (
             <TouchableOpacity 
               style={styles.btnAddGoal} 
@@ -104,14 +100,13 @@ export default function SharedSavingScreen() {
             </TouchableOpacity>
           )}
 
-          {/* Hiển thị danh sách dựa trên Tab đang chọn */}
           {displayGoals.length === 0 ? (
             <View style={{ alignItems: 'center', marginTop: 40 }}>
               <Feather name="archive" size={48} color="#D1D5DB" style={{ marginBottom: 16 }} />
               <Text style={{ textAlign: 'center', color: '#9CA3AF', fontFamily: 'Poppins_400Regular' }}>
                 {activeTab === 'active' 
-                  ? 'Chưa có mục tiêu tiết kiệm nào đang chạy.' 
-                  : 'Chưa có quỹ mục tiêu nào được hoàn thành.'}
+                  ? 'There are no savings goals currently in progress.' 
+                  : 'No target funds have been completed.'}
               </Text>
             </View>
           ) : (
@@ -158,7 +153,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTabButton: {
-    borderBottomColor: '#15476C', // Gạch dưới xanh đậm
+    borderBottomColor: '#15476C', 
   },
   tabText: {
     fontFamily: 'Poppins_500Medium',

@@ -17,7 +17,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useAuthStore } from "../../src/stores/auth.store";
 
-// ─── Floating Dot Component ──────────────────────────────────────────────
+
 interface FloatingDotProps {
   color: string;
   size: number;

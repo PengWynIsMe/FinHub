@@ -41,16 +41,16 @@ namespace Finhub.API.Controllers
             var totalWalletBalance = userWallets.Sum(w => w.CurrentBalance);
             var walletIds = userWallets.Select(w => w.WalletId).ToList();
 
-            // 2. 🆕 Kéo Budget kèm Category và cả Transactions để tính tiền đã tiêu
+            // 2. Kéo Budget kèm Category và cả Transactions để tính tiền đã tiêu
             var budgets = await _context.Budgets
                 .Include(b => b.Category)
-                .Include(b => b.Transactions) // Bắt buộc phải thêm dòng này
+                .Include(b => b.Transactions) 
                 .Where(b => walletIds.Contains(b.WalletId ?? Guid.Empty))
                 .ToListAsync();
 
             var totalAllocated = budgets.Sum(b => b.AmountLimit);
 
-            // 3. Tính Monthly Spending
+            // 3. Monthly Spending
             var firstDayOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc);
             var monthlyTransactions = await _context.Transactions
                 .Where(t => t.UserId == userId
@@ -60,7 +60,7 @@ namespace Finhub.API.Controllers
 
             var monthlySpending = monthlyTransactions.Sum(t => t.Amount);
 
-            // 4. Phân loại Budgets (Tính kèm Spent Amount)
+            // 4. Phân loại Budgets (kèm Spent Amount)
             var mandatoryList = budgets
                 .Where(b => b.BudgetType != null && b.BudgetType.ToLower() == "mandatory")
                 .Select(b => new BudgetDetailDto
@@ -69,7 +69,7 @@ namespace Finhub.API.Controllers
                     Name = !string.IsNullOrWhiteSpace(b.Name) ? b.Name : (b.Category?.Name ?? "Unnamed Budget"),
                     Icon = b.Category?.Icon ?? "💼",
                     Allocated = b.AmountLimit,
-                    // 🆕 Tự động tính tổng tiền các Transaction nằm trong Budget này
+                    // Tổng các Transaction nằm trong Budget 
                     Spent = b.Transactions != null ? b.Transactions.Sum(t => t.Amount) : 0,
                     Color = "#FF5F55"
                 }).ToList();
@@ -82,12 +82,12 @@ namespace Finhub.API.Controllers
                     Name = b.Category?.Name ?? "Non-Recurring Budget",
                     Icon = b.Category?.Icon ?? "🛒",
                     Allocated = b.AmountLimit,
-                    // 🆕 Tính tổng tiền đã tiêu
+                    // Tổng tiền đã tiêu
                     Spent = b.Transactions != null ? b.Transactions.Sum(t => t.Amount) : 0,
                     Color = "#FFAF2A"
                 }).ToList();
 
-            // 5. Tính Unallocated Money
+            // 5. Unallocated Money
             decimal totalLockedInBudgets = 0;
             foreach (var b in budgets)
             {
@@ -116,14 +116,14 @@ namespace Finhub.API.Controllers
         }
 
 
-        // 🆕 LẤY CHI TIẾT 1 NGÂN SÁCH THEO ID
+        // LẤY 1 NGÂN SÁCH THEO ID
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBudgetById(Guid id)
         {
             var budget = await _context.Budgets
                 .Include(b => b.Category)
                 .Include(b => b.Transactions)
-                    .ThenInclude(t => t.User) // ✅ Lấy kèm User để hiển thị tên + avatar
+                    .ThenInclude(t => t.User) 
                 .FirstOrDefaultAsync(b => b.BudgetId == id);
 
             if (budget == null)
@@ -136,7 +136,7 @@ namespace Finhub.API.Controllers
                 ? budget.Icon
                 : (budget.Category?.Icon ?? defaultIcon);
 
-            // ✅ Map transactions ra danh sách đơn giản cho Mobile
+            // Map transactions ra danh sách
             var transactions = budget.Transactions?
                 .OrderByDescending(t => t.TransactionDate)
                 .Select(t => new
@@ -167,14 +167,14 @@ namespace Finhub.API.Controllers
             });
         }
 
-        // 🆕 API LẤY TẤT CẢ BUDGET (CÁ NHÂN) + VÍ CHUNG (NHÓM)
+        // LẤY TẤT CẢ BUDGET (CÁ NHÂN) + VÍ CHUNG (NHÓM)
         [HttpGet("all-accessible")]
         public async Task<IActionResult> GetAllAccessibleBudgets()
         {
             var userId = GetUserId();
             if (userId == Guid.Empty) return Unauthorized();
 
-            // 1. LẤY CÁC NGÂN SÁCH CÁ NHÂN (Loại bỏ các budget nằm trong ví nhóm)
+            // 1. LẤY CÁC NGÂN SÁCH CÁ NHÂN
             var personalBudgets = await _context.Budgets
                 .Include(b => b.Wallet)
                 .Include(b => b.Category)
@@ -182,18 +182,18 @@ namespace Finhub.API.Controllers
                 .Where(b => !b.Wallet.IsArchived && b.Wallet.OwnerUserId == userId && b.Wallet.GroupId == null)
                 .Select(b => new
                 {
-                    id = b.BudgetId.ToString(), // Dùng ID này cho UI
+                    id = b.BudgetId.ToString(), 
                     name = b.Name ?? b.Category.Name ?? "Cá nhân",
                     icon = b.Icon ?? b.Category.Icon ?? "💰",
                     color = b.Color ?? "#15476C",
                     allocated = b.AmountLimit,
                     spent = b.Transactions != null ? b.Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount) : 0,
                     walletId = b.WalletId.ToString(),
-                    isGroupWallet = false // 💡 Cờ đánh dấu để Frontend biết đây là Budget thật
+                    isGroupWallet = false
                 })
                 .ToListAsync();
 
-            // 2. LẤY CÁC VÍ CHUNG CỦA NHÓM (Coi nó như 1 Budget để người dùng chi tiêu thẳng)
+            // 2. LẤY CÁC VÍ CHUNG CỦA NHÓM 
             var sharedWallets = await _context.Wallets
                 .Include(w => w.Group).ThenInclude(g => g.GroupMembers)
                 .Include(w => w.Transactions)
@@ -206,10 +206,10 @@ namespace Finhub.API.Controllers
                     icon = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(w.Name)}&background=10B981&color=fff",
                     color = w.Group.ThemeColor ?? "#10B981",
 
-                    // 💡 ĐÃ FIX: Chỉ tính Income đã Completed
+                    // Chỉ tính Income đã Completed
                     allocated = w.Transactions != null ? w.Transactions.Where(t => t.Type == "Income" && t.Status == "Completed").Sum(t => t.Amount) : 0,
 
-                    // 💡 ĐÃ FIX: Chỉ tính Expense đã Completed
+                    // Chỉ tính Expense đã Completed
                     spent = w.Transactions != null ? w.Transactions.Where(t => t.Type == "Expense" && t.Status == "Completed").Sum(t => t.Amount) : 0,
 
                     walletId = w.WalletId.ToString(),
@@ -217,7 +217,7 @@ namespace Finhub.API.Controllers
                 })
                 .ToListAsync();
 
-            // 3. GỘP 2 DANH SÁCH LẠI VÀ TRẢ VỀ FRONTEND
+            // 3. GỘP 2 DANH SÁCH
             var allAccessible = personalBudgets.Concat(sharedWallets).ToList();
 
             return Ok(allAccessible);
@@ -255,7 +255,6 @@ namespace Finhub.API.Controllers
             return Ok(new { Message = "Tạo ngân sách thành công!", BudgetId = newBudget.BudgetId });
         }
 
-        // 🆕 Đừng quên API Xóa này, nếu không Mobile báo lỗi 404 đó!
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBudget(Guid id)
         {
@@ -269,14 +268,13 @@ namespace Finhub.API.Controllers
             if (budget == null)
                 return NotFound(new { Message = "Không tìm thấy ngân sách này!" });
 
-            // ✅ Null hóa BudgetId ở tầng application — không cần thay đổi DB schema
             foreach (var transaction in budget.Transactions)
             {
                 transaction.BudgetId = null;
             }
 
             _context.Budgets.Remove(budget);
-            await _context.SaveChangesAsync(); // EF tự UPDATE transactions trước, rồi DELETE budget
+            await _context.SaveChangesAsync();
 
             return Ok(new { Message = "Đã xóa ngân sách thành công!" });
         }

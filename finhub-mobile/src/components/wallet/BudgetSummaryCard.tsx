@@ -2,18 +2,15 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
-// Import các hằng số giao diện và hàm format tiền tệ
 import { COLORS, SPACING, RADIUS, FONT_SIZE } from '@/constants/theme';
 import { formatCurrencyVND } from '@/utils/format';
 
-// 1. Định nghĩa Interface: Quy định dữ liệu đầu vào bắt buộc
 interface BudgetSummaryCardProps {
-  unallocatedMoney: number; // Số tiền chưa phân bổ
-  monthlySpending: number;  // Số tiền đã tiêu trong tháng
-  onAllocatePress: () => void; // Hàm xử lý khi bấm nút "Allocate Money"
+  unallocatedMoney: number; 
+  monthlySpending: number;  
+  onAllocatePress: () => void; 
 }
 
-// 2. Component chính
 export const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
   unallocatedMoney,
   monthlySpending,
@@ -21,7 +18,7 @@ export const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
 }) => {
   return (
     <View style={styles.summaryCard}>
-      {/* --- Phần 1: Tiền chưa phân bổ --- */}
+      {/* --- Tiền chưa phân bổ --- */}
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>Unallocated money</Text>
         <Feather name="alert-circle" size={16} color={COLORS.gray500} />
@@ -30,7 +27,7 @@ export const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
         {formatCurrencyVND(unallocatedMoney)}
       </Text>
 
-      {/* --- Phần 2: Chi tiêu tháng này --- */}
+      {/* --- Chi tiêu tháng này --- */}
       <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>Spending this month</Text>
         <Feather name="bar-chart-2" size={16} color={COLORS.gray500} />
@@ -39,11 +36,10 @@ export const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
         {formatCurrencyVND(monthlySpending)}
       </Text>
 
-      {/* --- Phần 3: Nút hành động --- */}
       <TouchableOpacity
         style={styles.allocateButton}
         activeOpacity={0.8}
-        onPress={onAllocatePress} // Gọi hàm được truyền từ bên ngoài vào
+        onPress={onAllocatePress} 
       >
         <Text style={styles.allocateButtonText}>ALLOCATE MONEY →</Text>
       </TouchableOpacity>
@@ -51,18 +47,16 @@ export const BudgetSummaryCard: React.FC<BudgetSummaryCardProps> = ({
   );
 };
 
-// 3. Styles: Đã được tách biệt và sử dụng biến từ theme
 const styles = StyleSheet.create({
   summaryCard: {
     backgroundColor: COLORS.white,
     borderRadius: RADIUS.xl,
     padding: SPACING.lg,
-    // Hiệu ứng đổ bóng (Shadow)
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 4, // Cho Android
+    elevation: 4,
   },
   summaryRow: {
     flexDirection: 'row',

@@ -15,15 +15,13 @@ export default function GroupNotificationsScreen() {
   const router = useRouter();
   const { name } = useLocalSearchParams<{ name: string }>();
   
-  // 💡 CÓ 3 TABS BÂY GIỜ
   const [activeTab, setActiveTab] = useState<'request' | 'qr_payments' | 'funds'>('request');
 
-  const [requests, setRequests] = useState<any[]>([]); // Data của Expense (Ảo)
-  const [qrRequests, setQrRequests] = useState<any[]>([]); // Data của QR Payment (Thật)
+  const [requests, setRequests] = useState<any[]>([]); 
+  const [qrRequests, setQrRequests] = useState<any[]>([]); 
   
   const [isLoading, setIsLoading] = useState(true);
 
-  // Modal hiển thị QR cho Phụ huynh quét
   const [selectedQrRequest, setSelectedQrRequest] = useState<any>(null);
 
   useFocusEffect(
@@ -49,7 +47,6 @@ export default function GroupNotificationsScreen() {
     }
   };
 
-  // ─── LOGIC CHO TAB EXPENSE REQUEST CŨ (GIỮ NGUYÊN) ───
   const handleAcceptExpense = async (id: string) => {
     try {
       await axiosClient.put(`/Notification/${id}/accept`);
@@ -67,13 +64,12 @@ export default function GroupNotificationsScreen() {
     } catch (error) {}
   };
 
-  // ─── 💡 LOGIC CHO TAB QR PAYMENTS MỚI ───
   const handleApproveQrPayment = async (id: string) => {
     try {
       await axiosClient.put(`/PaymentRequest/${id}/approve`);
       Alert.alert('Hoàn tất 🎉', 'Đã ghi nhận thanh toán thành công vào hệ thống quỹ nhóm!');
       setQrRequests(prev => prev.filter(req => req.id !== id));
-      setSelectedQrRequest(null); // Đóng modal
+      setSelectedQrRequest(null); 
     } catch (error: any) {
       Alert.alert('Lỗi', error.response?.data?.Message || 'Không thể duyệt lúc này.');
     }
@@ -100,17 +96,16 @@ export default function GroupNotificationsScreen() {
         </View>
 
         <View style={styles.tabContainer}>
-          {/* Tab 1: Chi tiêu ảo */}
           <TouchableOpacity style={[styles.tabButton, activeTab === 'request' && styles.activeTabButton]} onPress={() => setActiveTab('request')}>
             <Text style={[styles.tabText, activeTab === 'request' && styles.activeTabText]}>Expenses</Text>
           </TouchableOpacity>
           
-          {/* Tab 2: Thanh toán QR thật */}
+          {/* Thanh toán QR thật */}
           <TouchableOpacity style={[styles.tabButton, activeTab === 'qr_payments' && styles.activeTabButton]} onPress={() => setActiveTab('qr_payments')}>
             <Text style={[styles.tabText, activeTab === 'qr_payments' && styles.activeTabText]}>QR Pay</Text>
           </TouchableOpacity>
 
-          {/* Tab 3: Cảnh báo */}
+          {/* Cảnh báo */}
           <TouchableOpacity style={[styles.tabButton, activeTab === 'funds' && styles.activeTabButton]} onPress={() => setActiveTab('funds')}>
             <Text style={[styles.tabText, activeTab === 'funds' && styles.activeTabText]}>Alerts</Text>
           </TouchableOpacity>
@@ -153,7 +148,7 @@ export default function GroupNotificationsScreen() {
               ))
             )}
 
-            {/* ─── 💡 TAB 2: QR PAYMENTS (MỚI) ─── */}
+            {/* ─── Tạo Qr ─── */}
             {activeTab === 'qr_payments' && (
               qrRequests.length === 0 ? (
                 <Text style={{ textAlign: 'center', color: '#9CA3AF', marginTop: 40 }}>Không có yêu cầu thanh toán nào.</Text>
@@ -188,7 +183,7 @@ export default function GroupNotificationsScreen() {
                         onPress={() => setSelectedQrRequest(req)}
                       >
                         <Ionicons name="qr-code" size={16} color="#FFF" style={{marginRight: 6}} />
-                        <Text style={styles.btnAcceptText}>Thanh toán</Text>
+                        <Text style={styles.btnAcceptText}>Pay</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -201,19 +196,18 @@ export default function GroupNotificationsScreen() {
         )}
       </View>
 
-      {/* ─── MODAL: HIỂN THỊ MÃ QR ĐỂ BỐ MẸ QUÉT THANH TOÁN THẬT ─── */}
       <Modal visible={!!selectedQrRequest} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginBottom: 16}}>
-              <Text style={{fontFamily: 'Poppins_600SemiBold', fontSize: 18}}>Hóa đơn cửa hàng</Text>
+              <Text style={{fontFamily: 'Poppins_600SemiBold', fontSize: 18}}>Store invoice</Text>
               <TouchableOpacity onPress={() => setSelectedQrRequest(null)}>
                 <Feather name="x" size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
 
             <Text style={{color: '#6B7280', textAlign: 'center', marginBottom: 20}}>
-              Hãy dùng App Ngân hàng hoặc MoMo của bạn để quét mã QR dưới đây và thanh toán cho cửa hàng.
+              Please use your Bank App or MoMo to scan the QR code below and pay the store.
             </Text>
 
             <View style={{padding: 16, backgroundColor: '#FFF', borderRadius: 20, elevation: 5, shadowColor: '#000', shadowOpacity: 0.1, marginBottom: 20}}>
@@ -234,7 +228,7 @@ export default function GroupNotificationsScreen() {
               onPress={() => handleApproveQrPayment(selectedQrRequest.id)}
             >
               <Text style={{color: '#FFF', fontFamily: 'Poppins_600SemiBold', fontSize: 16}}>
-                Tôi đã chuyển tiền xong
+                Money transferred
               </Text>
             </TouchableOpacity>
 

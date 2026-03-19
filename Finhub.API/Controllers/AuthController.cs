@@ -37,7 +37,7 @@ namespace Finhub.API.Controllers
                 Email = request.Email,
                 FullName = request.FullName,
                 Nickname = request.Nickname,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password), // Băm mật khẩu!
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
             };
@@ -51,7 +51,7 @@ namespace Finhub.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            // 1. Tìm User theo Email
+            // 1. Tìm theo Email
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null) return Unauthorized("Invalid credentials!");
 
@@ -59,10 +59,10 @@ namespace Finhub.API.Controllers
             bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!isPasswordValid) return Unauthorized("Invalid credentials!");
 
-            // 3. Nếu đúng, tiến hành tạo JWT Token
+            // 3. Tạo JWT Token
             var token = GenerateJwtToken(user);
 
-            // 4. Trả về Token cho Mobile
+            // 4. fall back
             return Ok(new AuthResponse
             {
                 Token = token,
@@ -75,22 +75,21 @@ namespace Finhub.API.Controllers
         [HttpPost("forgot-password")]
         public IActionResult ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
-            // Trong tương lai nơi đây sẽ gọi SMS service hoặc Email service để gửi mã OTP
-            // Tạm thời trả về thành công để app Mobile có luồng chạy
+            // trả tạm
             return Ok(new { message = $"OTP code has been sent to {request.PhoneNumber}" });
         }
 
-        // --- HÀM HỖ TRỢ TẠO TOKEN ---
+        // TẠO TOKEN
         private string GenerateJwtToken(User user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            // Gói ghém thông tin (Claims) vào trong Token
+            // Gói Claims vào Token
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()), // Sub là nơi chứa ID
+                new Claim(JwtRegisteredClaimNames.Sub, user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("FullName", user.FullName)
             };
